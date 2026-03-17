@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>理想社区智慧建设系统 - 移动端</title>
+    <!-- 引入 crypto-js 用于计算 API 签名 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #FDF5E6;
+            /* 叠加宣纸纹理 */
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(178, 34, 34, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(218, 165, 32, 0.05) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        /* 传统文化水印 */
+        body::before {
+            content: "德";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 300px;
+            color: rgba(178, 34, 34, 0.03);
+            font-family: "STKaiti", serif;
+            z-index: -1;
+        }
+        /* 复古祥云装饰 */
+        .cloud-dec {
+            position: fixed;
+            width: 100px;
+            height: 50px;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: -1;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 50' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 30 Q 25 10 40 30 T 70 30 T 90 30' stroke='%23DAA520' fill='none' stroke-width='2'/%3E%3C/svg%3E");
+        }
+        .c1 { top: 150px; left: 10px; }
+        .c2 { top: 400px; right: 10px; transform: scaleX(-1); }
+        
+        /* 红色印章 */
+        .seal {
+            position: fixed;
+            bottom: 150px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border: 2px solid #B22222;
+            color: #B22222;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+            opacity: 0.3;
+            font-family: "STKaiti";
+            z-index: -1;
+        }
+        .header {
+            background-color: #B22222;
+            color: #FFD700;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 3px solid #DAA520;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .header h1 { margin: 0; font-size: 20px; letter-spacing: 1px; font-family: 'SimSun', serif; }
+        .header p { margin: 5px 0 0; font-size: 11px; color: white; opacity: 0.9; }
+        
+        .container { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+        
+        .page { display: none; flex-direction: column; animation: slideUp 0.4s ease-out; }
+        .page.active { display: flex; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .welcome { text-align: center; color: #B22222; font-size: 18px; font-weight: bold; margin-bottom: 8px; text-shadow: 1px 1px 0 rgba(255,255,255,0.5); }
+        .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 20px; }
+
+        /* 社区卡片增强 */
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-left: 8px solid;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::after {
+            content: "";
+            position: absolute;
+            right: -10px; bottom: -10px;
+            width: 50px; height: 50px;
+            background: currentColor;
+            opacity: 0.05;
+            border-radius: 50%;
+        }
+        .card h3 { margin: 0; font-size: 17px; }
+        .card p { margin: 6px 0 0; font-size: 12px; color: #666; }
+        
+        .functional { border-color: #3498db; color: #3498db; }
+        .atmospheric { border-color: #e67e22; color: #e67e22; }
+        .governance { border-color: #B22222; color: #B22222; }
+        .environment { border-color: #2E7D32; color: #2E7D32; }
+
+        /* 生成器界面增强 */
+        .generator-box { 
+            background: rgba(255, 255, 255, 0.95); 
+            border-radius: 15px; 
+            padding: 20px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 1px solid #DAA520;
+            position: relative;
+        }
+        /* 智能科技装饰角 */
+        .generator-box::before {
+            content: "";
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border: 1px solid rgba(178, 34, 34, 0.1);
+            pointer-events: none;
+            border-radius: 10px;
+        }
+        
+        .input-group { display: flex; gap: 8px; margin-bottom: 15px; position: relative; z-index: 1; align-items: center; }
+        input { flex: 1; padding: 12px; border: 2px solid #B22222; border-radius: 8px; font-size: 14px; outline: none; background: white; }
+        .voice-btn {
+            background: #fdfcf0;
+            border: 2px solid #B22222;
+            color: #B22222;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .voice-btn.recording {
+            background: #B22222;
+            color: white;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        button { padding: 8px 18px; background: #B22222; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 10px rgba(178, 34, 34, 0.2); }
+        .btn-outline { background: white; border: 2px solid #B22222; color: #B22222; margin-top: 12px; width: 100%; font-size: 14px; }
+        
+        canvas { 
+            width: 100%; 
+            height: 220px; 
+            background: #fff; 
+            border: 1px solid #eee; 
+            border-radius: 10px;
+            margin-bottom: 12px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .canvas-desc { font-size: 13px; color: #444; text-align: center; line-height: 1.6; background: #fdfcf0; padding: 10px; border-radius: 6px; }
+
+        /* API 加载动画与结果图样式 */
+        .spinner { width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid #B22222; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #scene-result { display: none; width: 100%; height: 220px; border-radius: 10px; object-fit: cover; margin-bottom: 12px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
+        .canvas-container { position: relative; }
+        #loading-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 220px; background: rgba(255,255,255,0.9); border-radius: 10px; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+
+        .footer {
+            padding: 20px;
+            background-color: rgba(178, 34, 34, 0.05);
+            border-top: 1px dashed #B22222;
+            text-align: center;
+            font-size: 13px;
+            color: #555;
+            font-style: italic;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="birds"></div>
+    <div class="cloud-dec c1"></div>
+    <div class="cloud-dec c2"></div>
+    <div class="seal">立德<br>树人</div>
+    <div class="header">
+        <h1 id="header-title">立德树人 · 培根铸魂</h1>
+        <p>培养新时代合格建设者</p>
+    </div>
+
+    <div class="container">
+        <!-- 页面 1: 社区选择 -->
+        <div id="page-selection" class="page active">
+            <div class="welcome">理想社区智慧建设系统</div>
+            <div class="subtitle">新时代青年，请选择您要规划的社区类型：</div>
+            <div id="selection-list"></div>
+        </div>
+
+        <!-- 页面 2: 蓝图生成器 -->
+        <div id="page-generator" class="page">
+            <div class="welcome" id="gen-title">社区理想蓝图生成</div>
+            <div class="generator-box">
+                <div class="input-group">
+                    <div class="voice-btn" id="voice-btn" onclick="toggleVoice()" title="点击语音描述">🎙️</div>
+                    <input type="text" id="keyword-input" placeholder="请语音描述出你理想的社区类型">
+                    <button onclick="generateScene('3d')">三维仿真</button>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="scene-canvas"></canvas>
+                    <img id="scene-result" alt="生成结果">
+                    <div id="loading-overlay">
+                        <div class="spinner"></div>
+                        <div style="margin-top:10px;font-size:12px;color:#B22222;font-weight:bold;">AI正在生成蓝图...</div>
+                    </div>
+                </div>
+                <div class="canvas-desc" id="scene-desc">请输入关键词并生成场景</div>
+                <button class="btn-outline" onclick="generateScene('plan')">生成规划图</button>
+                <button class="btn-outline" style="border-color: #666; color: #666;" onclick="backToSelection()">返回选择</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        “博学之，审问之，慎思之，明辨之，笃行之。”
+    </div>
+
+    <script>
+        // 调试信息：如果页面加载缓慢，显示在控制台或界面
+        console.log("Mobile Portal Loaded. Target PC IP: " + location.hostname);
+
+        const communities = [
+            { id: 'functional', name: "功能型社区", desc: "注重社区服务与功能完善", color: "#3498db", keywords: ["安全", "便捷", "养老", "育儿"] },
+            { id: 'atmospheric', name: "氛围型社区", desc: "强调文化熏陶与邻里和谐", color: "#e67e22", keywords: ["互助", "和谐", "活力", "文化"] },
+            { id: 'governance', name: "治理方式型社区", desc: "聚焦民主参与与科学治理", color: "#B22222", keywords: ["智慧", "参与", "透明", "高效"] },
+            { id: 'environment', name: "环境需求型社区", desc: "致力于绿色生态与宜居建设", color: "#2E7D32", keywords: ["绿色", "低碳", "美观", "宜居"] }
+        ];
+
+        let currentType = null;
+        let recognition = null;
+        let isRecording = false;
+
+        function toggleVoice() {
+            const btn = document.getElementById('voice-btn');
+            const input = document.getElementById('keyword-input');
+            
+            // 初始化语音识别对象 (如果还没初始化)
+            if (!recognition) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    alert("当前浏览器不支持语音识别功能，请手动输入文字。");
+                    return;
+                }
+                
+                recognition = new SpeechRecognition();
+                recognition.lang = 'zh-CN'; // 设置识别语言为中文
+                recognition.continuous = false; // 不连续识别，说完一句就结束
+                recognition.interimResults = false; // 不返回中间结果，只返回最终结果
+
+                // 录音开始时的回调
+                recognition.onstart = () => {
+                    isRecording = true;
+                    btn.classList.add('recording');
+                    input.placeholder = "正在倾听，请说话...";
+                    input.value = "";
+                };
+
+                // 识别成功返回结果时的回调
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    input.value = transcript; // 将识别到的中文文字填入输入框
+                    input.placeholder = "语音识别成功";
+                    
+                    // 自动触发生成 3D 仿真
+                    setTimeout(() => generateScene('3d'), 500);
+                };
+
+                // 识别出错时的回调
+                recognition.onerror = (event) => {
+                    console.error("语音识别错误:", event.error);
+                    if (event.error === 'not-allowed') {
+                        alert("麦克风权限被拒绝，请在浏览器设置中允许使用麦克风。");
+                    } else {
+                        input.placeholder = "识别失败，请重试或手动输入";
+                    }
+                };
+
+                // 录音结束时的回调
+                recognition.onend = () => {
+                    isRecording = false;
+                    btn.classList.remove('recording');
+                    if (!input.value) {
+                        input.placeholder = "请语音描述出你理想的社区类型";
+                    }
+                };
+            }
+
+            // 控制录音的开启与停止
+            if (!isRecording) {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.error("启动语音识别失败", e);
+                }
+            } else {
+                recognition.stop();
+            }
+        }
+
+        function initSelection() {
+            const list = document.getElementById('selection-list');
+            if (!list) return;
+            list.innerHTML = communities.map(c => `
+                <div class="card ${c.id}" onclick="enterGenerator('${c.id}')">
+                    <h3>${c.name}</h3>
+                    <p>${c.desc}</p>
+                </div>
+            `).join('');
+        }
+
+        function enterGenerator(typeId) {
+            currentType = communities.find(c => c.id === typeId);
+            document.getElementById('page-selection').style.display = 'none';
+            document.getElementById('page-generator').style.display = 'flex';
+            document.getElementById('gen-title').innerText = currentType.name + "：理想蓝图";
+            document.getElementById('keyword-input').placeholder = "请语音描述出理想的" + currentType.name + "（如: " + currentType.keywords.join(", ") + "）";
+            
+            // 发送选择通知给 PC 端 (不影响本地运行)
+            const api_url = '/api/select?type=' + encodeURIComponent(currentType.name);
+            fetch(api_url, { mode: 'no-cors' }).catch(e => console.log("PC offline or firewalled"));
+        }
+
+        function backToSelection() {
+            document.getElementById('page-generator').style.display = 'none';
+            document.getElementById('page-selection').style.display = 'flex';
+        }
+
+        // 封装通用的火山引擎 V4 签名 API 请求函数
+        async function fetchVolcengineAPI(action, bodyObj) {
+            // 在此直接配置 AK/SK (请妥善保管，勿泄露给他人)
+            const VOLC_AK = 'AKLTZTU1MjdjZWJmNGI0NGYzMTgxYTJjOTEzYWNjOWViOGE';
+            const VOLC_SK = 'TW1GaE1UWXlaVGMzTjJZek5EUmlOemd6T1RVMVlqTmlORE0xTXpVek9XUQ==';
+
+            if (!VOLC_AK || !VOLC_SK) {
+                throw new Error("未配置火山引擎 AK/SK，请检查代码配置。");
+            }
+
+            const region = "cn-north-1";
+            const service = "cv";
+            const host = "visual.volcengineapi.com";
+            const path = "/";
+            const version = "2022-08-31";
+            
+            const method = "POST";
+            const query = `Action=${action}&Version=${version}`;
+            const url = `https://${host}${path}?${query}`;
+            
+            const bodyStr = JSON.stringify(bodyObj);
+            
+            const t = new Date();
+            const xDate = t.toISOString().replace(/[:-]|\.\d{3}/g, '');
+            const shortDate = xDate.substring(0, 8);
+            
+            const hash = (str) => CryptoJS.SHA256(str).toString(CryptoJS.enc.Hex);
+            const hmac = (key, str, hex = false) => {
+                const res = CryptoJS.HmacSHA256(str, key);
+                return hex ? res.toString(CryptoJS.enc.Hex) : res;
+            };
+            
+            const contentType = "application/json";
+            const payloadHash = hash(bodyStr);
+            
+            const headers = {
+                "content-type": contentType,
+                "host": host,
+                "x-date": xDate
+            };
+            
+            const signedHeaders = "content-type;host;x-date";
+            
+            const canonicalRequest = [
+                method,
+                path,
+                query,
+                `content-type:${contentType}\nhost:${host}\nx-date:${xDate}\n`,
+                signedHeaders,
+                payloadHash
+            ].join('\n');
+            
+            const credentialScope = `${shortDate}/${region}/${service}/request`;
+            const stringToSign = [
+                "HMAC-SHA256",
+                xDate,
+                credentialScope,
+                hash(canonicalRequest)
+            ].join('\n');
+            
+            const kDate = hmac(VOLC_SK, shortDate);
+            const kRegion = hmac(kDate, region);
+            const kService = hmac(kRegion, service);
+            const kSigning = hmac(kService, "request");
+            
+            const signature = hmac(kSigning, stringToSign, true);
+            
+            const authorization = `HMAC-SHA256 Credential=${VOLC_AK}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+            
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    "Content-Type": contentType,
+                    "X-Date": xDate,
+                    "Authorization": authorization
+                },
+                body: bodyStr
+            });
+            
+            return await response.json();
+        }
+
+        async function callVolcengineAPI(prompt) {
+            // 1. 提交生成任务
+            const submitBody = {
+                req_key: "jimeng_t2i_v30",
+                prompt: prompt,
+                use_pre_llm: true,
+                seed: -1,
+                width: 1328,
+                height: 1328
+            };
+            const submitRes = await fetchVolcengineAPI("CVSync2AsyncSubmitTask", submitBody);
+            
+            if (submitRes.code !== 10000 || !submitRes.data || !submitRes.data.task_id) {
+                console.error("提交任务失败:", submitRes);
+                throw new Error(submitRes.message || "任务提交失败");
+            }
+            
+            const taskId = submitRes.data.task_id;
+            console.log("任务已提交，Task ID:", taskId);
+            
+            // 2. 轮询查询生成结果
+            const reqJsonObj = {
+                return_url: true,
+                logo_info: {
+                    add_logo: false,
+                    position: 0,
+                    language: 0,
+                    opacity: 1,
+                    logo_text_content: ""
+                }
+            };
+            const queryBody = {
+                req_key: "jimeng_t2i_v30",
+                task_id: taskId,
+                req_json: JSON.stringify(reqJsonObj)
+            };
+            
+            // 轮询最多 30 次，每次间隔 2 秒 (约 60 秒超时)
+            for (let i = 0; i < 30; i++) {
+                // 等待 2 秒
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                const queryRes = await fetchVolcengineAPI("CVSync2AsyncGetResult", queryBody);
+                
+                if (queryRes.code === 10000 && queryRes.data) {
+                    const status = queryRes.data.status;
+                    console.log(`轮询第 ${i+1} 次，状态: ${status}`);
+                    
+                    if (status === "done") {
+                        if (queryRes.data.image_urls && queryRes.data.image_urls.length > 0) {
+                            return queryRes.data.image_urls[0];
+                        } else {
+                            throw new Error("生成成功，但接口未返回图片链接");
+                        }
+                    } else if (status === "in_queue" || status === "generating") {
+                        // 继续轮询
+                        continue;
+                    } else {
+                        throw new Error(`任务状态异常: ${status}`);
+                    }
+                } else if (queryRes.code !== 10000) {
+                    throw new Error(queryRes.message || "任务查询失败");
+                }
+            }
+            
+            throw new Error("生成图片超时，请重试");
+        }
+
+        async function generateScene(mode) {
+            const kw = document.getElementById('keyword-input').value.trim();
+            if (!kw) return alert("请输入关键词");
+            
+            const canvas = document.getElementById('scene-canvas');
+            const resultImg = document.getElementById('scene-result');
+            const loading = document.getElementById('loading-overlay');
+            const desc = document.getElementById('scene-desc');
+            
+            // 构建 API 所需的 Prompt
+            // 按照文档建议：【艺术风格】+【主体描述】+【文字排版】
+            let prompt = "";
+            if (mode === '3d') {
+                prompt = `高质量三维仿真图，${currentType.name}：${kw}，建筑规划，绿化环境，真实的阳光光影，城市规划视角，清晰结构，无文字`;
+            } else {
+                prompt = `建筑规划平面图，设计图纸风格，${currentType.name}：${kw}，俯视图视角，清晰的区域划分与建筑布局，专业图纸，无文字`;
+            }
+
+            // 显示加载动画
+            loading.style.display = 'flex';
+            desc.innerText = `正在生成【${kw}】的${mode === '3d' ? '三维模拟' : '规划图'}...\n(首次请求可能需要几秒)`;
+
+            try {
+                // 尝试调用火山引擎 API 生成图片
+                const imageUrl = await callVolcengineAPI(prompt);
+                
+                // 成功后显示图片，隐藏 Canvas
+                canvas.style.display = 'none';
+                resultImg.src = imageUrl;
+                resultImg.style.display = 'block';
+                
+                desc.innerText = `【${kw}】${mode === '3d' ? '三维模拟' : '规划图'}\n已通过即梦文生图API生成`;
+            } catch (e) {
+                console.error(e);
+                // 如果 API 失败（未填 AK/SK、网络跨域等），则回退到 Canvas 绘制
+                canvas.style.display = 'block';
+                resultImg.style.display = 'none';
+                
+                const ctx = canvas.getContext('2d');
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                ctx.scale(dpr, dpr);
+                const w = rect.width;
+                const h = rect.height;
+                
+                ctx.fillStyle = "#fdfcf0";
+                ctx.fillRect(0, 0, w, h);
+                ctx.strokeStyle = currentType.color;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(5, 5, w-10, h-10);
+
+                if (mode === '3d') {
+                    draw3DSim(ctx, w, h, kw);
+                } else {
+                    drawPlanSim(ctx, w, h, kw);
+                }
+                
+                desc.innerText = `【${kw}】${mode === '3d' ? '三维模拟' : '规划图'}\n(回退到本地模拟：${e.message})`;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function draw3DSim(ctx, w, h, kw) {
+            let seed = 0;
+            for (let i = 0; i < kw.length; i++) seed = ((seed << 5) - seed) + kw.charCodeAt(i);
+            const rng = () => {
+                seed = (seed * 9301 + 49297) % 233280;
+                return seed / 233280;
+            };
+
+            // 仿真天空
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, h*0.5);
+            skyGrad.addColorStop(0, "#001a33");
+            skyGrad.addColorStop(1, "#004d99");
+            ctx.fillStyle = skyGrad; 
+            ctx.fillRect(0, 0, w, h*0.5); 
+            
+            // 仿真地面 (带网格)
+            ctx.fillStyle = "#1a1a1a"; 
+            ctx.fillRect(0, h*0.5, w, h*0.5); 
+            
+            ctx.strokeStyle = "rgba(0, 255, 255, 0.2)";
+            ctx.lineWidth = 1;
+            for(let i=0; i<20; i++) {
+                // 纵向
+                ctx.beginPath();
+                ctx.moveTo(w/2, h*0.5);
+                ctx.lineTo(w * (i/10 - 0.5), h);
+                ctx.stroke();
+                // 横向
+                ctx.beginPath();
+                ctx.moveTo(0, h*0.5 + i*20);
+                ctx.lineTo(w, h*0.5 + i*20);
+                ctx.stroke();
+            }
+
+            // 动态建筑
+            for (let i = 0; i < 3 + Math.floor(rng() * 3); i++) {
+                const bx = w * (0.2 + rng() * 0.6);
+                const by = h * (0.3 + rng() * 0.1);
+                const bw = 50 + rng() * 40;
+                const bh = 80 + rng() * 80;
+                const color = `hsl(${rng() * 360}, 60%, 40%)`;
+                drawSimBuilding(ctx, bx, by, bw, bh, color);
+            }
+
+            // HUD Overlay
+            ctx.strokeStyle = "#00FFFF";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(10, 10, 20, 20); // 简单的四角提示
+            ctx.fillStyle = "#00FFFF";
+            ctx.font = "10px monospace";
+            ctx.fillText("SIM_ACTIVE", 40, 25);
+        }
+
+        function drawSimBuilding(ctx, x, y, bw, bh, color) {
+            // 正面
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, bw, bh);
+            
+            // 侧面
+            ctx.fillStyle = "rgba(0,0,0,0.3)";
+            ctx.beginPath();
+            ctx.moveTo(x+bw, y); ctx.lineTo(x+bw+20, y-10);
+            ctx.lineTo(x+bw+20, y+bh-10); ctx.lineTo(x+bw, y+bh);
+            ctx.fill();
+            
+            // 顶部
+            ctx.fillStyle = "rgba(255,255,255,0.2)";
+            ctx.beginPath();
+            ctx.moveTo(x, y); ctx.lineTo(x+20, y-10);
+            ctx.lineTo(x+bw+20, y-10); ctx.lineTo(x+bw, y);
+            ctx.fill();
+
+            // 窗户
+            ctx.fillStyle = "rgba(0, 255, 255, 0.4)";
+            for(let r=1; r<bh/20; r++) {
+                for(let c=1; c<bw/15; c++) {
+                    ctx.fillRect(x + c*15-5, y + r*20-5, 6, 8);
+                }
+            }
+        }
+
+        function drawPlanSim(ctx, w, h, kw) {
+            let seed = 0;
+            for (let i = 0; i < kw.length; i++) seed = ((seed << 5) - seed) + kw.charCodeAt(i);
+            const rng = () => {
+                seed = (seed * 9301 + 49297) % 233280;
+                return seed / 233280;
+            };
+
+            ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, w, h);
+            ctx.strokeStyle = "#7f8c8d"; ctx.lineWidth = 10;
+            ctx.strokeRect(w*0.1, h*0.1, w*0.8, h*0.8); 
+            
+            // 随机分布节点
+            for (let i = 0; i < 5 + Math.floor(rng() * 5); i++) {
+                ctx.fillStyle = `hsl(${rng() * 360}, 60%, 50%)`;
+                ctx.beginPath(); 
+                ctx.arc(w * (0.2 + rng() * 0.6), h * (0.2 + rng() * 0.6), 15, 0, Math.PI*2); 
+                ctx.fill();
+            }
+            
+            ctx.fillStyle = "#333";
+            ctx.font = "bold 14px SimSun";
+            ctx.textAlign = "center";
+            ctx.fillText("基于语音/文字描述的动态规划图", w/2, h - 20);
+        }
+
+        // 确保 DOM 加载后初始化
+        window.onload = initSelection;
+    </script>
+</body>
+</html>
