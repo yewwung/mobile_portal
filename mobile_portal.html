@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>理想社区智慧建设系统 - 移动端</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdn.staticfile.net/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         body {
             font-family: 'Microsoft YaHei', sans-serif;
@@ -131,7 +131,20 @@
         }
         
         .input-group { display: flex; gap: 8px; margin-bottom: 15px; position: relative; z-index: 1; align-items: center; }
-        input { flex: 1; padding: 12px; border: 2px solid #B22222; border-radius: 8px; font-size: 14px; outline: none; background: white; }
+        input { 
+            flex: 1; padding: 12px; border: 2px solid #B22222; border-radius: 8px; 
+            font-size: 14px; outline: none; background: white; transition: all 0.3s;
+        }
+        /* 微信下引导语音输入时的高亮动画 */
+        .input-focus-highlight {
+            animation: focusPulse 1.5s infinite;
+        }
+        @keyframes focusPulse {
+            0% { box-shadow: 0 0 0 0 rgba(178, 34, 34, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(178, 34, 34, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(178, 34, 34, 0); }
+        }
+
         .voice-btn {
             background: #fdfcf0;
             border: 2px solid #B22222;
@@ -146,7 +159,9 @@
             transition: all 0.2s;
             font-size: 20px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            user-select: none;
         }
+        .voice-btn:active { background: #f5e4e4; transform: scale(0.95); }
         .voice-btn.recording {
             background: #B22222;
             color: white;
@@ -187,6 +202,32 @@
             font-style: italic;
             line-height: 1.5;
         }
+
+        /* 优雅的全局提示框 (替代 alert) */
+        .toast-msg {
+            position: fixed;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+            text-align: center;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            width: 75%;
+            max-width: 300px;
+            backdrop-filter: blur(5px);
+        }
+        .toast-msg.show {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -198,6 +239,8 @@
         <h1 id="header-title">立德树人 · 培根铸魂</h1>
         <p>培养新时代合格建设者</p>
     </div>
+
+    <div id="custom-toast" class="toast-msg"></div>
 
     <div class="container">
         <div id="page-selection" class="page active">
@@ -245,9 +288,21 @@
         let currentType = null;
         let recognition = null;
         let isRecording = false;
+        let toastTimeout = null;
 
-        // 核心检测：判断是否在微信环境内
+        // 判断是否为微信环境
         const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+
+        // 优雅展示提示框
+        function showToast(message, duration = 3500) {
+            const toast = document.getElementById('custom-toast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
 
         function getDefaultVoicePlaceholder() {
             if (currentType) {
@@ -298,32 +353,35 @@
                 isRecording = false;
                 btn.classList.remove('recording');
                 input.placeholder = getDefaultVoicePlaceholder();
-                
-                // 兼容部分偶发的权限被拒情况
-                if(event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-                    alert("💡 温馨提示：\n\n受当前浏览器安全限制，网页无法直接调用麦克风。\n\n请点击输入框后，使用系统键盘上的【🎙️麦克风】图标进行语音输入。");
-                }
             };
 
             return true;
         }
 
-        // ====== 修复核心：微信强拦截降级方案 ======
+        // ====== 彻底解决微信没反应的问题 ======
         function toggleVoice() {
             if (isRecording && recognition) {
                 try { recognition.stop(); } catch(e) {}
                 return;
             }
 
-            // 微信内置浏览器强拦截：不调用 Web Speech，直接引导使用键盘语音
+            const input = document.getElementById('keyword-input');
+
+            // 微信环境下，直接让输入框获取焦点并弹系统键盘，抛弃浏览器语音接口
             if (isWeChat || !supportsBrowserSpeech()) {
-                const input = document.getElementById('keyword-input');
                 input.focus(); 
-                alert("💡 温馨提示：\n\n受微信环境限制，网页无法直接调用麦克风。\n\n已为您唤起键盘，请直接点击输入法键盘上的【🎙️麦克风】进行语音输入，识别更精准哦！");
+                input.placeholder = "👉 现已唤起键盘，请点击上方麦克风";
+                
+                // 增加高亮呼吸灯动画，引导用户看输入框
+                input.classList.add('input-focus-highlight');
+                setTimeout(() => input.classList.remove('input-focus-highlight'), 3000);
+
+                // 使用轻提示代替 alert，防止中断操作
+                showToast("💡 微信环境请直接点击键盘上的【🎙️语音】图标说话，系统识别更准确！");
                 return;
             }
 
-            // 非微信的普通浏览器（如 Chrome、Edge 等）
+            // 普通电脑/安卓浏览器走原生语音流
             if (ensureRecognition()) {
                 try {
                     recognition.start();
@@ -357,6 +415,7 @@
             cancelActiveVoiceCapture();
 
             document.getElementById('keyword-input').value = "";
+            document.getElementById('keyword-input').classList.remove('input-focus-highlight');
             document.getElementById('scene-result').style.display = 'none';
             document.getElementById('scene-result').src = "";
             document.getElementById('scene-canvas').style.display = 'block';
@@ -386,7 +445,7 @@
             }
 
             if (!imageUrl || imageUrl === 'data:,') {
-                alert("当前没有可保存的图片，请先生成蓝图。");
+                showToast("当前没有可保存的图片，请先生成蓝图~");
                 return;
             }
 
@@ -560,7 +619,7 @@
 
         async function generateScene(mode) {
             const kw = document.getElementById('keyword-input').value.trim();
-            if (!kw) return alert("请输入关键词");
+            if (!kw) return showToast("请输入或描述您的关键词哦！");
             
             const canvas = document.getElementById('scene-canvas');
             const resultImg = document.getElementById('scene-result');
