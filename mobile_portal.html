@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>理想社区智慧建设系统 - 移动端</title>
-    <script src="https://cdn.staticfile.net/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- 引入 crypto-js 用于计算 API 签名 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         body {
             font-family: 'Microsoft YaHei', sans-serif;
             background-color: #FDF5E6;
+            /* 叠加宣纸纹理 */
             background-image: 
                 radial-gradient(circle at 20% 20%, rgba(178, 34, 34, 0.02) 0%, transparent 50%),
                 radial-gradient(circle at 80% 80%, rgba(218, 165, 32, 0.05) 0%, transparent 50%),
@@ -20,6 +22,7 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
+        /* 传统文化水印 */
         body::before {
             content: "德";
             position: fixed;
@@ -31,6 +34,7 @@
             font-family: "STKaiti", serif;
             z-index: -1;
         }
+        /* 复古祥云装饰 */
         .cloud-dec {
             position: fixed;
             width: 100px;
@@ -43,6 +47,7 @@
         .c1 { top: 150px; left: 10px; }
         .c2 { top: 400px; right: 10px; transform: scaleX(-1); }
         
+        /* 红色印章 */
         .seal {
             position: fixed;
             bottom: 150px;
@@ -84,6 +89,7 @@
         .welcome { text-align: center; color: #B22222; font-size: 18px; font-weight: bold; margin-bottom: 8px; text-shadow: 1px 1px 0 rgba(255,255,255,0.5); }
         .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 20px; }
 
+        /* 社区卡片增强 */
         .card {
             background: rgba(255, 255, 255, 0.9);
             border-radius: 12px;
@@ -113,6 +119,7 @@
         .governance { border-color: #B22222; color: #B22222; }
         .environment { border-color: #2E7D32; color: #2E7D32; }
 
+        /* 生成器界面增强 */
         .generator-box { 
             background: rgba(255, 255, 255, 0.95); 
             border-radius: 15px; 
@@ -121,6 +128,7 @@
             border: 1px solid #DAA520;
             position: relative;
         }
+        /* 智能科技装饰角 */
         .generator-box::before {
             content: "";
             position: absolute;
@@ -131,20 +139,7 @@
         }
         
         .input-group { display: flex; gap: 8px; margin-bottom: 15px; position: relative; z-index: 1; align-items: center; }
-        input { 
-            flex: 1; padding: 12px; border: 2px solid #B22222; border-radius: 8px; 
-            font-size: 14px; outline: none; background: white; transition: all 0.3s;
-        }
-        /* 微信下引导语音输入时的高亮动画 */
-        .input-focus-highlight {
-            animation: focusPulse 1.5s infinite;
-        }
-        @keyframes focusPulse {
-            0% { box-shadow: 0 0 0 0 rgba(178, 34, 34, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(178, 34, 34, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(178, 34, 34, 0); }
-        }
-
+        input { flex: 1; padding: 12px; border: 2px solid #B22222; border-radius: 8px; font-size: 14px; outline: none; background: white; }
         .voice-btn {
             background: #fdfcf0;
             border: 2px solid #B22222;
@@ -159,9 +154,7 @@
             transition: all 0.2s;
             font-size: 20px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            user-select: none;
         }
-        .voice-btn:active { background: #f5e4e4; transform: scale(0.95); }
         .voice-btn.recording {
             background: #B22222;
             color: white;
@@ -186,6 +179,7 @@
         }
         .canvas-desc { font-size: 13px; color: #444; text-align: center; line-height: 1.6; background: #fdfcf0; padding: 10px; border-radius: 6px; }
 
+        /* API 加载动画与结果图样式 */
         .spinner { width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid #B22222; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #scene-result { display: none; width: 100%; height: 220px; border-radius: 10px; object-fit: cover; margin-bottom: 12px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
@@ -202,32 +196,6 @@
             font-style: italic;
             line-height: 1.5;
         }
-
-        /* 优雅的全局提示框 (替代 alert) */
-        .toast-msg {
-            position: fixed;
-            top: 40%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.85);
-            color: #fff;
-            padding: 15px 20px;
-            border-radius: 10px;
-            font-size: 14px;
-            line-height: 1.6;
-            text-align: center;
-            z-index: 9999;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            width: 75%;
-            max-width: 300px;
-            backdrop-filter: blur(5px);
-        }
-        .toast-msg.show {
-            opacity: 1;
-        }
     </style>
 </head>
 <body>
@@ -240,23 +208,24 @@
         <p>培养新时代合格建设者</p>
     </div>
 
-    <div id="custom-toast" class="toast-msg"></div>
-
     <div class="container">
+        <!-- 页面 1: 社区选择 -->
         <div id="page-selection" class="page active">
             <div class="welcome">理想社区智慧建设系统</div>
             <div class="subtitle">新时代青年，请选择您要规划的社区类型：</div>
             <div id="selection-list"></div>
         </div>
 
+        <!-- 页面 2: 蓝图生成器 -->
         <div id="page-generator" class="page">
             <div class="welcome" id="gen-title">社区理想蓝图生成</div>
             <div class="generator-box">
                 <div class="input-group">
-                    <div class="voice-btn" id="voice-btn" onclick="toggleVoice()" title="点击语音输入">🎙️</div>
+                    <div class="voice-btn" id="voice-btn" onclick="toggleVoice()" title="点击语音描述">🎙️</div>
                     <input type="text" id="keyword-input" placeholder="请语音描述出你理想的社区类型">
                     <button onclick="generateScene('3d')">三维仿真</button>
                 </div>
+                <input type="file" id="voice-file-input" accept="audio/*" capture="microphone" style="display:none;">
                 <div class="canvas-container">
                     <canvas id="scene-canvas"></canvas>
                     <img id="scene-result" alt="生成结果">
@@ -278,6 +247,9 @@
     </div>
 
     <script>
+        // 调试信息：如果页面加载缓慢，显示在控制台或界面
+        console.log("Mobile Portal Loaded. Target PC IP: " + location.hostname);
+
         const communities = [
             { id: 'functional', name: "功能型社区", desc: "注重社区服务与功能完善", color: "#3498db", keywords: ["安全", "便捷", "养老", "育儿"] },
             { id: 'atmospheric', name: "氛围型社区", desc: "强调文化熏陶与邻里和谐", color: "#e67e22", keywords: ["互助", "和谐", "活力", "文化"] },
@@ -288,21 +260,20 @@
         let currentType = null;
         let recognition = null;
         let isRecording = false;
-        let toastTimeout = null;
+        let stopRequested = false;
+        let lastVoiceHint = "";
+        let activeVoiceProvider = "";
+        let bridgeAudioContext = null;
+        let bridgeMediaStream = null;
+        let bridgeSourceNode = null;
+        let bridgeProcessorNode = null;
+        let bridgeAudioChunks = [];
+        let pendingVoiceFileInput = null;
 
-        // 判断是否为微信环境
-        const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
-
-        // 优雅展示提示框
-        function showToast(message, duration = 3500) {
-            const toast = document.getElementById('custom-toast');
-            toast.innerText = message;
-            toast.classList.add('show');
-            if (toastTimeout) clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.remove('show');
-            }, duration);
-        }
+        const queryParams = new URLSearchParams(window.location.search);
+        const isLocalPortalPage = /^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(window.location.hostname);
+        const voiceBridgeBaseUrl = ((queryParams.get('pc') || '').trim() || (isLocalPortalPage ? window.location.origin : '')).replace(/\/$/, '');
+        const isWeChatBrowser = /MicroMessenger/i.test(navigator.userAgent);
 
         function getDefaultVoicePlaceholder() {
             if (currentType) {
@@ -315,89 +286,525 @@
             return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
         }
 
+        function supportsBridgeRecording() {
+            return !!(voiceBridgeBaseUrl && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.isSecureContext);
+        }
+
+        function supportsBridgeVoiceUpload() {
+            return !!(voiceBridgeBaseUrl && document.getElementById('voice-file-input'));
+        }
+
+        function getVoiceStrategy() {
+            if (isWeChatBrowser && (supportsBridgeRecording() || supportsBridgeVoiceUpload())) {
+                return 'bridge';
+            }
+            if (supportsBrowserSpeech()) {
+                return 'webspeech';
+            }
+            if (supportsBridgeRecording() || supportsBridgeVoiceUpload()) {
+                return 'bridge';
+            }
+            return 'manual';
+        }
+
+        function setVoiceHint(message, options = {}) {
+            const input = document.getElementById('keyword-input');
+            if (!input) return;
+
+            const hint = message || getDefaultVoicePlaceholder();
+            lastVoiceHint = hint;
+            input.placeholder = hint;
+
+            if (options.focusInput) {
+                input.focus();
+            }
+
+            if (options.alertUser) {
+                alert(hint);
+            }
+        }
+
+        function getVoiceErrorMessage(errorCode) {
+            const errorMap = {
+                'aborted': '本次语音识别已取消，请再点一次麦克风继续。',
+                'audio-capture': '未检测到可用麦克风，请检查系统录音权限或设备连接。',
+                'language-not-supported': '当前浏览器不支持中文语音识别，请手动输入关键词。',
+                'network': '语音识别服务连接失败，请检查网络后重试。',
+                'no-speech': '没有听到清晰语音，请靠近麦克风后再试一次。',
+                'not-allowed': '麦克风权限被拒绝，请在浏览器设置中允许麦克风后重试。',
+                'service-not-allowed': '当前浏览器禁用了语音识别服务，建议改用 Chrome 或 Edge 重试。'
+            };
+
+            if (!errorCode && !window.isSecureContext) {
+                return '当前页面未在安全环境中打开，请使用 HTTPS 或 localhost 后再试。';
+            }
+
+            return errorMap[errorCode] || '当前浏览器语音识别不可用，请重试或直接手动输入关键词。';
+        }
+
+        function getStartVoiceErrorMessage(error) {
+            if (error?.name === 'InvalidStateError') {
+                return '语音识别正在启动中，请稍候再试。';
+            }
+            return getVoiceErrorMessage();
+        }
+
+        function getBridgeUnavailableMessage() {
+            if (isWeChatBrowser && !voiceBridgeBaseUrl) {
+                return '微信内请扫描电脑端最新二维码进入，同一 Wi-Fi 下即可使用语音转文字。';
+            }
+            if (isWeChatBrowser) {
+                return '未检测到电脑端语音服务，请确认手机与电脑在同一 Wi-Fi，并保持桌面程序开启。';
+            }
+            return '当前浏览器不支持语音识别，请改用支持语音的浏览器，或连接电脑端语音服务后重试。';
+        }
+
+        function cleanupBridgeRecorder() {
+            if (bridgeProcessorNode) {
+                bridgeProcessorNode.disconnect();
+                bridgeProcessorNode.onaudioprocess = null;
+                bridgeProcessorNode = null;
+            }
+            if (bridgeSourceNode) {
+                bridgeSourceNode.disconnect();
+                bridgeSourceNode = null;
+            }
+            if (bridgeMediaStream) {
+                bridgeMediaStream.getTracks().forEach(track => track.stop());
+                bridgeMediaStream = null;
+            }
+            if (bridgeAudioContext) {
+                bridgeAudioContext.close().catch(() => {});
+                bridgeAudioContext = null;
+            }
+            bridgeAudioChunks = [];
+        }
+
+        function mergeAudioChunks(chunks) {
+            const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+            const merged = new Float32Array(totalLength);
+            let offset = 0;
+            chunks.forEach(chunk => {
+                merged.set(chunk, offset);
+                offset += chunk.length;
+            });
+            return merged;
+        }
+
+        function downsampleAudioBuffer(buffer, inputSampleRate, outputSampleRate) {
+            if (outputSampleRate >= inputSampleRate) {
+                return buffer;
+            }
+
+            const sampleRateRatio = inputSampleRate / outputSampleRate;
+            const newLength = Math.round(buffer.length / sampleRateRatio);
+            const result = new Float32Array(newLength);
+            let offsetResult = 0;
+            let offsetBuffer = 0;
+
+            while (offsetResult < result.length) {
+                const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
+                let accum = 0;
+                let count = 0;
+
+                for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+                    accum += buffer[i];
+                    count += 1;
+                }
+
+                result[offsetResult] = count ? accum / count : 0;
+                offsetResult += 1;
+                offsetBuffer = nextOffsetBuffer;
+            }
+
+            return result;
+        }
+
+        function encodeWavBlob(samples, sampleRate) {
+            const buffer = new ArrayBuffer(44 + samples.length * 2);
+            const view = new DataView(buffer);
+
+            function writeString(offset, text) {
+                for (let i = 0; i < text.length; i++) {
+                    view.setUint8(offset + i, text.charCodeAt(i));
+                }
+            }
+
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + samples.length * 2, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(36, 'data');
+            view.setUint32(40, samples.length * 2, true);
+
+            let offset = 44;
+            for (let i = 0; i < samples.length; i++) {
+                const sample = Math.max(-1, Math.min(1, samples[i]));
+                view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                offset += 2;
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        async function transcribeByVoiceBridge(wavBlob) {
+            const formData = new FormData();
+            formData.append('audio', wavBlob, 'voice.wav');
+
+            const response = await fetch(`${voiceBridgeBaseUrl}/api/transcribe-audio`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.ok) {
+                throw new Error(data.message || '电脑端语音识别失败，请重试。');
+            }
+
+            return (data.text || '').trim();
+        }
+
+        function getVoiceFileInput() {
+            if (!pendingVoiceFileInput) {
+                pendingVoiceFileInput = document.getElementById('voice-file-input');
+            }
+            return pendingVoiceFileInput;
+        }
+
+        async function convertAudioFileToWav(file) {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) {
+                throw new Error('当前浏览器无法解析录音文件。');
+            }
+
+            const tempContext = new AudioContextClass();
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const audioBuffer = await tempContext.decodeAudioData(arrayBuffer.slice(0));
+                const channelData = audioBuffer.numberOfChannels > 1
+                    ? audioBuffer.getChannelData(0)
+                    : audioBuffer.getChannelData(0);
+                const wavBlob = encodeWavBlob(
+                    downsampleAudioBuffer(channelData, audioBuffer.sampleRate, 16000),
+                    16000
+                );
+                return wavBlob;
+            } finally {
+                tempContext.close().catch(() => {});
+            }
+        }
+
+        async function handleVoiceFileSelected(event) {
+            const input = document.getElementById('keyword-input');
+            const fileInput = event.target;
+            const file = fileInput.files && fileInput.files[0];
+
+            fileInput.value = '';
+            resetVoiceButton();
+
+            if (!file) {
+                return;
+            }
+
+            try {
+                setVoiceHint('正在解析录音并识别文字...');
+                const wavBlob = await convertAudioFileToWav(file);
+                const transcript = await transcribeByVoiceBridge(wavBlob);
+
+                if (!transcript) {
+                    throw new Error('没有识别到清晰语音，请重新录制后再试。');
+                }
+
+                input.value = transcript;
+                setVoiceHint('语音识别成功');
+                setTimeout(() => generateScene('3d'), 300);
+            } catch (error) {
+                console.error('录音文件识别失败:', error);
+                const message = error?.message || '录音识别失败，请重试或手动输入关键词。';
+                setVoiceHint(message, { focusInput: true, alertUser: isWeChatBrowser });
+            }
+        }
+
+        function openVoiceFilePicker() {
+            const fileInput = getVoiceFileInput();
+            if (!fileInput) {
+                setVoiceHint('当前页面未准备好录音入口，请刷新后重试。', { focusInput: true, alertUser: true });
+                return;
+            }
+
+            fileInput.click();
+        }
+
+        async function startBridgeRecording() {
+            if (supportsBridgeVoiceUpload() && !supportsBridgeRecording()) {
+                setVoiceHint('请录制一段语音，完成后会自动转换为文字...');
+                openVoiceFilePicker();
+                return;
+            }
+
+            if (!supportsBridgeRecording()) {
+                setVoiceHint(getBridgeUnavailableMessage(), { focusInput: true, alertUser: true });
+                return;
+            }
+
+            const btn = document.getElementById('voice-btn');
+            const input = document.getElementById('keyword-input');
+
+            try {
+                bridgeMediaStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        channelCount: 1,
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextClass) {
+                    throw new Error('当前浏览器不支持录音上下文。');
+                }
+
+                bridgeAudioContext = new AudioContextClass();
+                if (bridgeAudioContext.state === 'suspended') {
+                    await bridgeAudioContext.resume();
+                }
+
+                bridgeAudioChunks = [];
+                bridgeSourceNode = bridgeAudioContext.createMediaStreamSource(bridgeMediaStream);
+                bridgeProcessorNode = bridgeAudioContext.createScriptProcessor(4096, 1, 1);
+                bridgeProcessorNode.onaudioprocess = (event) => {
+                    if (!isRecording || activeVoiceProvider !== 'bridge') {
+                        return;
+                    }
+                    const channelData = event.inputBuffer.getChannelData(0);
+                    bridgeAudioChunks.push(new Float32Array(channelData));
+                };
+
+                bridgeSourceNode.connect(bridgeProcessorNode);
+                bridgeProcessorNode.connect(bridgeAudioContext.destination);
+
+                isRecording = true;
+                stopRequested = false;
+                activeVoiceProvider = 'bridge';
+
+                if (btn) {
+                    btn.classList.add('recording');
+                    btn.setAttribute('aria-pressed', 'true');
+                }
+
+                if (input) {
+                    input.blur();
+                }
+
+                setVoiceHint('正在录音，请再次点击麦克风结束并转换文字...');
+            } catch (error) {
+                console.error('启动本地录音失败:', error);
+                cleanupBridgeRecorder();
+                activeVoiceProvider = '';
+                isRecording = false;
+                setVoiceHint('无法启动录音，请确认微信已允许麦克风，并与电脑保持同一 Wi-Fi。', { focusInput: true, alertUser: isWeChatBrowser });
+            }
+        }
+
+        async function stopBridgeRecording() {
+            const input = document.getElementById('keyword-input');
+            const sampleRate = bridgeAudioContext ? bridgeAudioContext.sampleRate : 44100;
+            const audioChunks = bridgeAudioChunks.slice();
+
+            isRecording = false;
+            stopRequested = false;
+            activeVoiceProvider = '';
+            resetVoiceButton();
+            cleanupBridgeRecorder();
+
+            if (!audioChunks.length) {
+                setVoiceHint('没有录到有效语音，请靠近麦克风后再试一次。', { focusInput: true });
+                return;
+            }
+
+            try {
+                setVoiceHint('正在上传录音并识别文字...');
+                const mergedAudio = mergeAudioChunks(audioChunks);
+                const wavBlob = encodeWavBlob(downsampleAudioBuffer(mergedAudio, sampleRate, 16000), 16000);
+                const transcript = await transcribeByVoiceBridge(wavBlob);
+
+                if (!transcript) {
+                    throw new Error('没有识别到清晰语音，请放慢语速后重试。');
+                }
+
+                input.value = transcript;
+                setVoiceHint('语音识别成功');
+                setTimeout(() => generateScene('3d'), 300);
+            } catch (error) {
+                console.error('电脑端语音识别失败:', error);
+                const message = error?.message || '电脑端语音识别失败，请确认桌面程序在线后重试。';
+                setVoiceHint(message, { focusInput: true, alertUser: isWeChatBrowser });
+            }
+        }
+
+        function resetVoiceButton() {
+            const btn = document.getElementById('voice-btn');
+            if (!btn) return;
+
+            btn.classList.remove('recording');
+            btn.setAttribute('aria-pressed', 'false');
+        }
+
         function ensureRecognition() {
-            if (recognition) return true;
+            if (recognition && recognition.__enhanced) {
+                return true;
+            }
+
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) return false;
+            if (!SpeechRecognition) {
+                setVoiceHint('当前浏览器不支持实时语音识别，请直接手动输入关键词。', { focusInput: true, alertUser: true });
+                return false;
+            }
 
             const btn = document.getElementById('voice-btn');
             const input = document.getElementById('keyword-input');
             recognition = new SpeechRecognition();
+            recognition.__enhanced = true;
             recognition.lang = 'zh-CN';
             recognition.continuous = false;
             recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
 
             recognition.onstart = () => {
                 isRecording = true;
-                btn.classList.add('recording');
-                input.blur();
-                input.placeholder = '正在倾听，请说话...';
+                stopRequested = false;
+
+                if (btn) {
+                    btn.classList.add('recording');
+                    btn.setAttribute('aria-pressed', 'true');
+                }
+
+                if (input) {
+                    input.blur();
+                }
+
+                setVoiceHint('正在倾听，请说话...');
             };
 
             recognition.onresult = (event) => {
-                const transcript = event.results?.[0]?.[0]?.transcript?.trim();
-                if (transcript) {
-                    input.value = transcript;
-                    setTimeout(() => generateScene('3d'), 300);
+                const result = event.results?.[0]?.[0];
+                const transcript = result?.transcript?.trim();
+
+                if (!transcript) {
+                    setVoiceHint('没有识别到有效语音，请再试一次或手动输入关键词。', { focusInput: true });
+                    return;
                 }
+
+                input.value = transcript;
+                setVoiceHint('语音识别成功');
+                setTimeout(() => generateScene('3d'), 300);
             };
 
-            recognition.onend = () => {
-                isRecording = false;
-                btn.classList.remove('recording');
-                input.placeholder = getDefaultVoicePlaceholder();
+            recognition.onnomatch = () => {
+                setVoiceHint('没有匹配到清晰语音，请放慢语速后重试。', { focusInput: true });
             };
 
             recognition.onerror = (event) => {
                 console.error('语音识别错误:', event.error);
+
+                if (event.error === 'aborted' && stopRequested) {
+                    return;
+                }
+
+                const message = getVoiceErrorMessage(event.error);
+                const needsAlert = event.error === 'not-allowed' || event.error === 'service-not-allowed';
+                setVoiceHint(message, { focusInput: true, alertUser: needsAlert });
+            };
+
+            recognition.onend = () => {
                 isRecording = false;
-                btn.classList.remove('recording');
-                input.placeholder = getDefaultVoicePlaceholder();
+                stopRequested = false;
+                activeVoiceProvider = '';
+                resetVoiceButton();
+
+                if (!input.value) {
+                    input.placeholder = lastVoiceHint || getDefaultVoicePlaceholder();
+                }
             };
 
             return true;
         }
 
-        // ====== 彻底解决微信没反应的问题 ======
-        function toggleVoice() {
-            if (isRecording && recognition) {
-                try { recognition.stop(); } catch(e) {}
-                return;
+        function stopActiveVoiceCapture() {
+            if (activeVoiceProvider === 'bridge') {
+                return stopBridgeRecording();
             }
 
-            const input = document.getElementById('keyword-input');
-
-            // 微信环境下，直接让输入框获取焦点并弹系统键盘，抛弃浏览器语音接口
-            if (isWeChat || !supportsBrowserSpeech()) {
-                input.focus(); 
-                input.placeholder = "👉 现已唤起键盘，请点击上方麦克风";
-                
-                // 增加高亮呼吸灯动画，引导用户看输入框
-                input.classList.add('input-focus-highlight');
-                setTimeout(() => input.classList.remove('input-focus-highlight'), 3000);
-
-                // 使用轻提示代替 alert，防止中断操作
-                showToast("💡 微信环境请直接点击键盘上的【🎙️语音】图标说话，系统识别更准确！");
-                return;
+            if (recognition && isRecording) {
+                stopRequested = true;
+                recognition.stop();
             }
 
-            // 普通电脑/安卓浏览器走原生语音流
-            if (ensureRecognition()) {
-                try {
-                    recognition.start();
-                } catch (e) {
-                    console.error("启动语音异常：", e);
-                }
-            }
+            return Promise.resolve();
         }
 
         function cancelActiveVoiceCapture() {
-            if (recognition && isRecording) {
-                try { recognition.stop(); } catch(e) {}
+            if (activeVoiceProvider === 'bridge' || bridgeMediaStream) {
+                cleanupBridgeRecorder();
             }
+
+            if (recognition && isRecording) {
+                stopRequested = true;
+                try {
+                    recognition.stop();
+                } catch (error) {
+                    console.warn('停止语音识别时发生异常:', error);
+                }
+            }
+
+            activeVoiceProvider = '';
             isRecording = false;
-            const btn = document.getElementById('voice-btn');
-            if (btn) btn.classList.remove('recording');
+            stopRequested = false;
+            resetVoiceButton();
+        }
+
+        async function toggleVoice() {
+            if (isRecording) {
+                await stopActiveVoiceCapture();
+                return;
+            }
+
+            const strategy = getVoiceStrategy();
+
+            if (strategy === 'bridge') {
+                await startBridgeRecording();
+                return;
+            }
+
+            if (strategy !== 'webspeech') {
+                setVoiceHint(getBridgeUnavailableMessage(), { focusInput: true, alertUser: true });
+                return;
+            }
+
+            if (!ensureRecognition()) {
+                return;
+            }
+
+            activeVoiceProvider = 'webspeech';
+
+            try {
+                setVoiceHint('正在准备语音识别...');
+                recognition.start();
+            } catch (error) {
+                console.error('启动语音识别失败', error);
+                resetVoiceButton();
+                isRecording = false;
+                activeVoiceProvider = '';
+                setVoiceHint(getStartVoiceErrorMessage(error), { focusInput: true });
+            }
         }
 
         function initSelection() {
@@ -414,21 +821,26 @@
         function enterGenerator(typeId) {
             cancelActiveVoiceCapture();
 
+            // 清空上一次的状态
             document.getElementById('keyword-input').value = "";
-            document.getElementById('keyword-input').classList.remove('input-focus-highlight');
             document.getElementById('scene-result').style.display = 'none';
             document.getElementById('scene-result').src = "";
             document.getElementById('scene-canvas').style.display = 'block';
             document.getElementById('scene-desc').innerText = "请输入关键词并生成场景";
             const canvas = document.getElementById('scene-canvas');
             const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height); 
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空画布
 
             currentType = communities.find(c => c.id === typeId);
             document.getElementById('page-selection').style.display = 'none';
             document.getElementById('page-generator').style.display = 'flex';
             document.getElementById('gen-title').innerText = currentType.name + "：理想蓝图";
             document.getElementById('keyword-input').placeholder = getDefaultVoicePlaceholder();
+            
+            // 发送选择通知给 PC 端 (不影响本地运行)
+            const apiBase = voiceBridgeBaseUrl || '';
+            const api_url = apiBase + '/api/select?type=' + encodeURIComponent(currentType.name);
+            fetch(api_url).catch(e => console.log("PC offline or firewalled"));
         }
 
         function saveImage() {
@@ -439,16 +851,19 @@
             let fileName = `理想社区_${currentType ? currentType.name : '蓝图'}_${new Date().getTime()}.png`;
 
             if (resultImg.style.display !== 'none' && resultImg.src) {
+                // 如果显示的是 AI 生成的图片
                 imageUrl = resultImg.src;
             } else {
+                // 如果显示的是 Canvas 绘制的图片
                 imageUrl = canvas.toDataURL("image/png");
             }
 
             if (!imageUrl || imageUrl === 'data:,') {
-                showToast("当前没有可保存的图片，请先生成蓝图~");
+                alert("当前没有可保存的图片，请先生成蓝图。");
                 return;
             }
 
+            // 创建临时链接下载
             const link = document.createElement('a');
             link.href = imageUrl;
             link.download = fileName;
@@ -459,16 +874,19 @@
 
         function backToSelection() {
             cancelActiveVoiceCapture();
+
             document.getElementById('page-generator').style.display = 'none';
             document.getElementById('page-selection').style.display = 'flex';
         }
 
+        // 封装通用的火山引擎 V4 签名 API 请求函数
         async function fetchVolcengineAPI(action, bodyObj) {
+            // 在此直接配置 AK/SK (请妥善保管，勿泄露给他人)
             const VOLC_AK = 'AKLTZTU1MjdjZWJmNGI0NGYzMTgxYTJjOTEzYWNjOWViOGE';
             const VOLC_SK = 'TW1GaE1UWXlaVGMzTjJZek5EUmlOemd6T1RVMVlqTmlORE0xTXpVek9XUQ==';
 
             if (!VOLC_AK || !VOLC_SK) {
-                throw new Error("未配置火山引擎 AK/SK");
+                throw new Error("未配置火山引擎 AK/SK，请检查代码配置。");
             }
 
             const region = "cn-north-1";
@@ -496,12 +914,30 @@
             const contentType = "application/json";
             const payloadHash = hash(bodyStr);
             
-            const headers = { "content-type": contentType, "host": host, "x-date": xDate };
+            const headers = {
+                "content-type": contentType,
+                "host": host,
+                "x-date": xDate
+            };
+            
             const signedHeaders = "content-type;host;x-date";
             
-            const canonicalRequest = [method, path, query, `content-type:${contentType}\nhost:${host}\nx-date:${xDate}\n`, signedHeaders, payloadHash].join('\n');
+            const canonicalRequest = [
+                method,
+                path,
+                query,
+                `content-type:${contentType}\nhost:${host}\nx-date:${xDate}\n`,
+                signedHeaders,
+                payloadHash
+            ].join('\n');
+            
             const credentialScope = `${shortDate}/${region}/${service}/request`;
-            const stringToSign = ["HMAC-SHA256", xDate, credentialScope, hash(canonicalRequest)].join('\n');
+            const stringToSign = [
+                "HMAC-SHA256",
+                xDate,
+                credentialScope,
+                hash(canonicalRequest)
+            ].join('\n');
             
             const kDate = hmac(VOLC_SK, shortDate);
             const kRegion = hmac(kDate, region);
@@ -509,6 +945,7 @@
             const kSigning = hmac(kService, "request");
             
             const signature = hmac(kSigning, stringToSign, true);
+            
             const authorization = `HMAC-SHA256 Credential=${VOLC_AK}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
             
             const response = await fetch(url, {
@@ -525,23 +962,53 @@
         }
 
         async function callVolcengineAPI(prompt) {
-            const submitBody = { req_key: "jimeng_t2i_v30", prompt: prompt, use_pre_llm: true, seed: -1, width: 1328, height: 1328 };
+            // 1. 提交生成任务
+            const submitBody = {
+                req_key: "jimeng_t2i_v30",
+                prompt: prompt,
+                use_pre_llm: true,
+                seed: -1,
+                width: 1328,
+                height: 1328
+            };
             const submitRes = await fetchVolcengineAPI("CVSync2AsyncSubmitTask", submitBody);
             
             if (submitRes.code !== 10000 || !submitRes.data || !submitRes.data.task_id) {
+                console.error("提交任务失败:", submitRes);
                 throw new Error(submitRes.message || "任务提交失败");
             }
             
             const taskId = submitRes.data.task_id;
-            const reqJsonObj = { return_url: true, logo_info: { add_logo: false, position: 0, language: 0, opacity: 1, logo_text_content: "" } };
-            const queryBody = { req_key: "jimeng_t2i_v30", task_id: taskId, req_json: JSON.stringify(reqJsonObj) };
+            console.log("任务已提交，Task ID:", taskId);
             
+            // 2. 轮询查询生成结果
+            const reqJsonObj = {
+                return_url: true,
+                logo_info: {
+                    add_logo: false,
+                    position: 0,
+                    language: 0,
+                    opacity: 1,
+                    logo_text_content: ""
+                }
+            };
+            const queryBody = {
+                req_key: "jimeng_t2i_v30",
+                task_id: taskId,
+                req_json: JSON.stringify(reqJsonObj)
+            };
+            
+            // 轮询最多 30 次，每次间隔 2 秒 (约 60 秒超时)
             for (let i = 0; i < 30; i++) {
+                // 等待 2 秒
                 await new Promise(resolve => setTimeout(resolve, 2000));
+                
                 const queryRes = await fetchVolcengineAPI("CVSync2AsyncGetResult", queryBody);
                 
                 if (queryRes.code === 10000 && queryRes.data) {
                     const status = queryRes.data.status;
+                    console.log(`轮询第 ${i+1} 次，状态: ${status}`);
+                    
                     if (status === "done") {
                         if (queryRes.data.image_urls && queryRes.data.image_urls.length > 0) {
                             return queryRes.data.image_urls[0];
@@ -549,6 +1016,7 @@
                             throw new Error("生成成功，但接口未返回图片链接");
                         }
                     } else if (status === "in_queue" || status === "generating") {
+                        // 继续轮询
                         continue;
                     } else {
                         throw new Error(`任务状态异常: ${status}`);
@@ -557,13 +1025,16 @@
                     throw new Error(queryRes.message || "任务查询失败");
                 }
             }
+            
             throw new Error("生成图片超时，请重试");
         }
 
+        // 调用火山引擎 Ark 大模型进行意图识别
         async function checkCommunityMatch(userInput, communityType) {
             const API_KEY = '173aa29f-0450-421a-936b-338d2851c458';
             const url = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
             
+            // 构建系统提示词
             const systemPrompt = `你是一个社区规划意图识别助手。你的任务是判断用户的描述是否符合当前选择的社区类型。
             
             以下是四种社区类型及其核心关键词：
@@ -583,14 +1054,17 @@
             如果符合当前社区，请返回：{"result": "MATCH", "reason": "简短的匹配理由"}
             如果不符合，请返回：{"result": "MISMATCH", "suggestion": "最合适的社区类型名称", "reason": "简短的判断理由"}
             
-            请仅返回标准的 JSON 格式字符串，不要包含 Markdown 标记。`;
+            请仅返回标准的 JSON 格式字符串，不要包含 Markdown 标记（如 \`\`\`json）。`;
 
             try {
                 const response = await fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
                     body: JSON.stringify({
-                        model: "deepseek-v3-2-251201", 
+                        model: "deepseek-v3-2-251201", // 使用通用的模型ID，如果报错请替换为您的 Endpoint ID
                         messages: [
                             { role: "system", content: systemPrompt },
                             { role: "user", content: userInput }
@@ -599,39 +1073,47 @@
                     })
                 });
 
-                if (!response.ok) return { result: "MATCH", reason: "接口调用异常，默认通过" }; 
+                if (!response.ok) {
+                    console.warn("Ark API call failed:", response.status, response.statusText);
+                    return { result: "MATCH", reason: "接口调用异常，默认通过" }; // 接口调用失败时默认通过
+                }
 
                 const data = await response.json();
                 if (data.choices && data.choices.length > 0) {
                     let content = data.choices[0].message.content.trim();
+                    // 清理可能存在的 Markdown 代码块标记
                     content = content.replace(/^```json/, '').replace(/^```/, '').replace(/```$/, '');
+                    console.log("LLM Check Result:", content);
                     try {
                         return JSON.parse(content);
                     } catch (e) {
-                        return { result: "MATCH", reason: "结果解析异常，默认通过" }; 
+                        console.error("Failed to parse LLM response:", e);
+                        return { result: "MATCH", reason: "结果解析异常，默认通过" }; // 解析失败默认通过
                     }
                 }
             } catch (error) {
                 console.error("Error calling Ark LLM:", error);
             }
-            return { result: "MATCH", reason: "请求错误，默认通过" }; 
+            return { result: "MATCH", reason: "请求错误，默认通过" }; // 出错默认通过
         }
 
         async function generateScene(mode) {
             const kw = document.getElementById('keyword-input').value.trim();
-            if (!kw) return showToast("请输入或描述您的关键词哦！");
+            if (!kw) return alert("请输入关键词");
             
             const canvas = document.getElementById('scene-canvas');
             const resultImg = document.getElementById('scene-result');
             const loading = document.getElementById('loading-overlay');
             const desc = document.getElementById('scene-desc');
 
+            // 1. 调用大模型进行意图校验
             loading.style.display = 'flex';
             desc.innerText = "AI正在分析您的需求...";
             
             const matchData = await checkCommunityMatch(kw, currentType);
             
             let matchResult = matchData.result;
+            // 容错：如果大模型判断为 MISMATCH，但建议的社区依然是当前社区，强制视为 MATCH
             if (matchResult === "MISMATCH" && matchData.suggestion && matchData.suggestion.includes(currentType.name)) {
                 matchResult = "MATCH";
             }
@@ -645,6 +1127,11 @@
                 return;
             }
             
+            // 匹配的情况下，不再弹窗打断用户，直接在控制台记录理由并继续自动生成
+            console.log("意图识别通过:", matchData.reason || "描述符合当前社区特征");
+            
+            // 2. 构建 API 所需的 Prompt
+            // 按照文档建议：【艺术风格】+【主体描述】+【文字排版】
             let prompt = "";
             if (mode === '3d') {
                 prompt = `高质量三维仿真图，${currentType.name}：${kw}，建筑规划，绿化环境，真实的阳光光影，城市规划视角，清晰结构，无文字`;
@@ -652,11 +1139,15 @@
                 prompt = `建筑规划平面图，设计图纸风格，${currentType.name}：${kw}，俯视图视角，清晰的区域划分与建筑布局，专业图纸，无文字`;
             }
 
+            // 显示加载动画
+            loading.style.display = 'flex';
             desc.innerText = `正在生成【${kw}】的${mode === '3d' ? '三维模拟' : '规划图'}...\n(首次请求可能需要几秒)`;
 
             try {
+                // 尝试调用火山引擎 API 生成图片
                 const imageUrl = await callVolcengineAPI(prompt);
                 
+                // 成功后显示图片，隐藏 Canvas
                 canvas.style.display = 'none';
                 resultImg.src = imageUrl;
                 resultImg.style.display = 'block';
@@ -664,6 +1155,7 @@
                 desc.innerText = `【${kw}】${mode === '3d' ? '三维模拟' : '规划图'}\n已通过即梦文生图API生成`;
             } catch (e) {
                 console.error(e);
+                // 如果 API 失败（未填 AK/SK、网络跨域等），则回退到 Canvas 绘制
                 canvas.style.display = 'block';
                 resultImg.style.display = 'none';
                 
@@ -702,28 +1194,33 @@
                 return seed / 233280;
             };
 
+            // 仿真天空
             const skyGrad = ctx.createLinearGradient(0, 0, 0, h*0.5);
             skyGrad.addColorStop(0, "#001a33");
             skyGrad.addColorStop(1, "#004d99");
             ctx.fillStyle = skyGrad; 
             ctx.fillRect(0, 0, w, h*0.5); 
             
+            // 仿真地面 (带网格)
             ctx.fillStyle = "#1a1a1a"; 
             ctx.fillRect(0, h*0.5, w, h*0.5); 
             
             ctx.strokeStyle = "rgba(0, 255, 255, 0.2)";
             ctx.lineWidth = 1;
             for(let i=0; i<20; i++) {
+                // 纵向
                 ctx.beginPath();
                 ctx.moveTo(w/2, h*0.5);
                 ctx.lineTo(w * (i/10 - 0.5), h);
                 ctx.stroke();
+                // 横向
                 ctx.beginPath();
                 ctx.moveTo(0, h*0.5 + i*20);
                 ctx.lineTo(w, h*0.5 + i*20);
                 ctx.stroke();
             }
 
+            // 动态建筑
             for (let i = 0; i < 3 + Math.floor(rng() * 3); i++) {
                 const bx = w * (0.2 + rng() * 0.6);
                 const by = h * (0.3 + rng() * 0.1);
@@ -733,30 +1230,35 @@
                 drawSimBuilding(ctx, bx, by, bw, bh, color);
             }
 
+            // HUD Overlay
             ctx.strokeStyle = "#00FFFF";
             ctx.lineWidth = 2;
-            ctx.strokeRect(10, 10, 20, 20);
+            ctx.strokeRect(10, 10, 20, 20); // 简单的四角提示
             ctx.fillStyle = "#00FFFF";
             ctx.font = "10px monospace";
             ctx.fillText("SIM_ACTIVE", 40, 25);
         }
 
         function drawSimBuilding(ctx, x, y, bw, bh, color) {
+            // 正面
             ctx.fillStyle = color;
             ctx.fillRect(x, y, bw, bh);
             
+            // 侧面
             ctx.fillStyle = "rgba(0,0,0,0.3)";
             ctx.beginPath();
             ctx.moveTo(x+bw, y); ctx.lineTo(x+bw+20, y-10);
             ctx.lineTo(x+bw+20, y+bh-10); ctx.lineTo(x+bw, y+bh);
             ctx.fill();
             
+            // 顶部
             ctx.fillStyle = "rgba(255,255,255,0.2)";
             ctx.beginPath();
             ctx.moveTo(x, y); ctx.lineTo(x+20, y-10);
             ctx.lineTo(x+bw+20, y-10); ctx.lineTo(x+bw, y);
             ctx.fill();
 
+            // 窗户
             ctx.fillStyle = "rgba(0, 255, 255, 0.4)";
             for(let r=1; r<bh/20; r++) {
                 for(let c=1; c<bw/15; c++) {
@@ -777,6 +1279,7 @@
             ctx.strokeStyle = "#7f8c8d"; ctx.lineWidth = 10;
             ctx.strokeRect(w*0.1, h*0.1, w*0.8, h*0.8); 
             
+            // 随机分布节点
             for (let i = 0; i < 5 + Math.floor(rng() * 5); i++) {
                 ctx.fillStyle = `hsl(${rng() * 360}, 60%, 50%)`;
                 ctx.beginPath(); 
@@ -790,8 +1293,33 @@
             ctx.fillText("基于语音/文字描述的动态规划图", w/2, h - 20);
         }
 
+        function initVoiceEntry() {
+            const btn = document.getElementById('voice-btn');
+            const fileInput = getVoiceFileInput();
+            if (!btn) return;
+
+            if (fileInput && !fileInput.dataset.bound) {
+                fileInput.addEventListener('change', handleVoiceFileSelected);
+                fileInput.dataset.bound = '1';
+            }
+
+            if (isWeChatBrowser && (supportsBridgeRecording() || supportsBridgeVoiceUpload())) {
+                btn.title = "微信录音转文字（需与电脑同一 Wi-Fi）";
+                return;
+            }
+
+            if (supportsBrowserSpeech()) {
+                btn.title = "点击语音描述";
+                return;
+            }
+
+            btn.title = "语音受限，请手动输入或连接电脑端语音服务";
+        }
+
+        // 确保 DOM 加载后初始化
         window.onload = () => {
             initSelection();
+            initVoiceEntry();
         };
     </script>
 </body>
