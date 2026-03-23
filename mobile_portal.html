@@ -42,6 +42,7 @@
         }
         .c1 { top: 150px; left: 10px; }
         .c2 { top: 400px; right: 10px; transform: scaleX(-1); }
+        
         .seal {
             position: fixed;
             bottom: 150px;
@@ -73,12 +74,16 @@
         }
         .header h1 { margin: 0; font-size: 20px; letter-spacing: 1px; font-family: 'SimSun', serif; }
         .header p { margin: 5px 0 0; font-size: 11px; color: white; opacity: 0.9; }
+        
         .container { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+        
         .page { display: none; flex-direction: column; animation: slideUp 0.4s ease-out; }
         .page.active { display: flex; }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
         .welcome { text-align: center; color: #B22222; font-size: 18px; font-weight: bold; margin-bottom: 8px; text-shadow: 1px 1px 0 rgba(255,255,255,0.5); }
         .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 20px; }
+
         .card {
             background: rgba(255, 255, 255, 0.9);
             border-radius: 12px;
@@ -102,10 +107,12 @@
         }
         .card h3 { margin: 0; font-size: 17px; }
         .card p { margin: 6px 0 0; font-size: 12px; color: #666; }
+        
         .functional { border-color: #3498db; color: #3498db; }
         .atmospheric { border-color: #e67e22; color: #e67e22; }
         .governance { border-color: #B22222; color: #B22222; }
         .environment { border-color: #2E7D32; color: #2E7D32; }
+
         .generator-box { 
             background: rgba(255, 255, 255, 0.95); 
             border-radius: 15px; 
@@ -122,6 +129,7 @@
             pointer-events: none;
             border-radius: 10px;
         }
+        
         .input-group { display: flex; gap: 8px; margin-bottom: 15px; position: relative; z-index: 1; align-items: center; }
         input { flex: 1; padding: 12px; border: 2px solid #B22222; border-radius: 8px; font-size: 14px; outline: none; background: white; }
         .voice-btn {
@@ -151,6 +159,7 @@
         }
         button { padding: 8px 18px; background: #B22222; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 10px rgba(178, 34, 34, 0.2); }
         .btn-outline { background: white; border: 2px solid #B22222; color: #B22222; margin-top: 12px; width: 100%; font-size: 14px; }
+        
         canvas { 
             width: 100%; 
             height: 220px; 
@@ -161,11 +170,13 @@
             box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
         }
         .canvas-desc { font-size: 13px; color: #444; text-align: center; line-height: 1.6; background: #fdfcf0; padding: 10px; border-radius: 6px; }
+
         .spinner { width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid #B22222; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #scene-result { display: none; width: 100%; height: 220px; border-radius: 10px; object-fit: cover; margin-bottom: 12px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
         .canvas-container { position: relative; }
         #loading-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 220px; background: rgba(255,255,255,0.9); border-radius: 10px; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+
         .footer {
             padding: 20px;
             background-color: rgba(178, 34, 34, 0.05);
@@ -199,7 +210,7 @@
             <div class="welcome" id="gen-title">社区理想蓝图生成</div>
             <div class="generator-box">
                 <div class="input-group">
-                    <div class="voice-btn" id="voice-btn" onclick="toggleVoice()" title="点击语音描述">🎙️</div>
+                    <div class="voice-btn" id="voice-btn" onclick="toggleVoice()" title="点击语音输入">🎙️</div>
                     <input type="text" id="keyword-input" placeholder="请语音描述出你理想的社区类型">
                     <button onclick="generateScene('3d')">三维仿真</button>
                 </div>
@@ -235,6 +246,9 @@
         let recognition = null;
         let isRecording = false;
 
+        // 核心检测：判断是否在微信环境内
+        const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+
         function getDefaultVoicePlaceholder() {
             if (currentType) {
                 return "请语音描述出理想的" + currentType.name + "（如：" + currentType.keywords.join("、") + "）";
@@ -242,7 +256,6 @@
             return "请语音描述出你理想的社区类型";
         }
 
-        // 检查浏览器是否原生支持 Web Speech API (通常仅安卓版 Chrome 支持，微信/iOS Safari 均不支持)
         function supportsBrowserSpeech() {
             return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
         }
@@ -285,35 +298,44 @@
                 isRecording = false;
                 btn.classList.remove('recording');
                 input.placeholder = getDefaultVoicePlaceholder();
+                
+                // 兼容部分偶发的权限被拒情况
+                if(event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                    alert("💡 温馨提示：\n\n受当前浏览器安全限制，网页无法直接调用麦克风。\n\n请点击输入框后，使用系统键盘上的【🎙️麦克风】图标进行语音输入。");
+                }
             };
 
             return true;
         }
 
-        // ====== 核心优化：微信优雅降级语音输入 ======
+        // ====== 修复核心：微信强拦截降级方案 ======
         function toggleVoice() {
             if (isRecording && recognition) {
-                recognition.stop();
+                try { recognition.stop(); } catch(e) {}
                 return;
             }
 
-            if (supportsBrowserSpeech() && ensureRecognition()) {
+            // 微信内置浏览器强拦截：不调用 Web Speech，直接引导使用键盘语音
+            if (isWeChat || !supportsBrowserSpeech()) {
+                const input = document.getElementById('keyword-input');
+                input.focus(); 
+                alert("💡 温馨提示：\n\n受微信环境限制，网页无法直接调用麦克风。\n\n已为您唤起键盘，请直接点击输入法键盘上的【🎙️麦克风】进行语音输入，识别更精准哦！");
+                return;
+            }
+
+            // 非微信的普通浏览器（如 Chrome、Edge 等）
+            if (ensureRecognition()) {
                 try {
                     recognition.start();
                 } catch (e) {
-                    console.error(e);
+                    console.error("启动语音异常：", e);
                 }
-            } else {
-                // 如果是微信等不支持 Web Speech 的环境：触发系统输入法弹窗
-                const input = document.getElementById('keyword-input');
-                input.focus(); 
-                alert("💡 温馨提示：\n\n受微信环境安全限制，网页无法直接调用麦克风。\n\n请点击输入框后，使用您手机输入法键盘上自带的【🎙️麦克风】图标进行语音输入，识别更精准哦！");
             }
         }
 
         function cancelActiveVoiceCapture() {
             if (recognition && isRecording) {
-                try { recognition.stop(); } catch (e) {}
+                try { recognition.stop(); } catch(e) {}
             }
             isRecording = false;
             const btn = document.getElementById('voice-btn');
@@ -333,6 +355,7 @@
 
         function enterGenerator(typeId) {
             cancelActiveVoiceCapture();
+
             document.getElementById('keyword-input').value = "";
             document.getElementById('scene-result').style.display = 'none';
             document.getElementById('scene-result').src = "";
@@ -340,7 +363,7 @@
             document.getElementById('scene-desc').innerText = "请输入关键词并生成场景";
             const canvas = document.getElementById('scene-canvas');
             const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height); 
 
             currentType = communities.find(c => c.id === typeId);
             document.getElementById('page-selection').style.display = 'none';
@@ -352,6 +375,7 @@
         function saveImage() {
             const resultImg = document.getElementById('scene-result');
             const canvas = document.getElementById('scene-canvas');
+            
             let imageUrl;
             let fileName = `理想社区_${currentType ? currentType.name : '蓝图'}_${new Date().getTime()}.png`;
 
@@ -384,11 +408,20 @@
             const VOLC_AK = 'AKLTZTU1MjdjZWJmNGI0NGYzMTgxYTJjOTEzYWNjOWViOGE';
             const VOLC_SK = 'TW1GaE1UWXlaVGMzTjJZek5EUmlOemd6T1RVMVlqTmlORE0xTXpVek9XUQ==';
 
-            if (!VOLC_AK || !VOLC_SK) throw new Error("未配置火山引擎 AK/SK");
+            if (!VOLC_AK || !VOLC_SK) {
+                throw new Error("未配置火山引擎 AK/SK");
+            }
 
-            const region = "cn-north-1", service = "cv", host = "visual.volcengineapi.com", path = "/", version = "2022-08-31";
-            const method = "POST", query = `Action=${action}&Version=${version}`;
+            const region = "cn-north-1";
+            const service = "cv";
+            const host = "visual.volcengineapi.com";
+            const path = "/";
+            const version = "2022-08-31";
+            
+            const method = "POST";
+            const query = `Action=${action}&Version=${version}`;
             const url = `https://${host}${path}?${query}`;
+            
             const bodyStr = JSON.stringify(bodyObj);
             
             const t = new Date();
@@ -403,7 +436,10 @@
             
             const contentType = "application/json";
             const payloadHash = hash(bodyStr);
+            
+            const headers = { "content-type": contentType, "host": host, "x-date": xDate };
             const signedHeaders = "content-type;host;x-date";
+            
             const canonicalRequest = [method, path, query, `content-type:${contentType}\nhost:${host}\nx-date:${xDate}\n`, signedHeaders, payloadHash].join('\n');
             const credentialScope = `${shortDate}/${region}/${service}/request`;
             const stringToSign = ["HMAC-SHA256", xDate, credentialScope, hash(canonicalRequest)].join('\n');
@@ -418,9 +454,14 @@
             
             const response = await fetch(url, {
                 method: method,
-                headers: { "Content-Type": contentType, "X-Date": xDate, "Authorization": authorization },
+                headers: {
+                    "Content-Type": contentType,
+                    "X-Date": xDate,
+                    "Authorization": authorization
+                },
                 body: bodyStr
             });
+            
             return await response.json();
         }
 
@@ -443,8 +484,11 @@
                 if (queryRes.code === 10000 && queryRes.data) {
                     const status = queryRes.data.status;
                     if (status === "done") {
-                        if (queryRes.data.image_urls && queryRes.data.image_urls.length > 0) return queryRes.data.image_urls[0];
-                        else throw new Error("接口未返回图片链接");
+                        if (queryRes.data.image_urls && queryRes.data.image_urls.length > 0) {
+                            return queryRes.data.image_urls[0];
+                        } else {
+                            throw new Error("生成成功，但接口未返回图片链接");
+                        }
                     } else if (status === "in_queue" || status === "generating") {
                         continue;
                     } else {
@@ -462,40 +506,56 @@
             const url = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
             
             const systemPrompt = `你是一个社区规划意图识别助手。你的任务是判断用户的描述是否符合当前选择的社区类型。
+            
             以下是四种社区类型及其核心关键词：
             1. 功能型社区：安全、便捷、养老、育儿
             2. 氛围型社区：互助、和谐、活力、文化
             3. 治理方式型社区：智慧、参与、透明、高效
             4. 环境需求型社区：绿色、低碳、美观、宜居
-            当前选择：【${communityType.name}】
-            核心关键词：${communityType.keywords.join('、')}
-            请判断用户描述是否符合当前社区类型。
+            
+            当前选择的社区类型是：【${communityType.name}】
+            当前社区的核心关键词是：${communityType.keywords.join('、')}
+            
+            请分析用户的输入内容：
+            1. 判断用户描述是否符合当前社区类型。只要用户的描述（例如“绿色建筑”）与当前社区的核心理念存在相关性，就应判定为符合。
+            2. 只有在用户描述完全偏离当前社区，且明显属于其他社区类型时，才判定为不符合。
+            
             返回格式要求（JSON格式）：
-            符合返回：{"result": "MATCH", "reason": "理由"}
-            不符合返回：{"result": "MISMATCH", "suggestion": "建议类型", "reason": "理由"}`;
+            如果符合当前社区，请返回：{"result": "MATCH", "reason": "简短的匹配理由"}
+            如果不符合，请返回：{"result": "MISMATCH", "suggestion": "最合适的社区类型名称", "reason": "简短的判断理由"}
+            
+            请仅返回标准的 JSON 格式字符串，不要包含 Markdown 标记。`;
 
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
                     body: JSON.stringify({
-                        model: "deepseek-v3-2-251201",
-                        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userInput }],
+                        model: "deepseek-v3-2-251201", 
+                        messages: [
+                            { role: "system", content: systemPrompt },
+                            { role: "user", content: userInput }
+                        ],
                         temperature: 0.1
                     })
                 });
 
-                if (!response.ok) return { result: "MATCH", reason: "接口异常" };
+                if (!response.ok) return { result: "MATCH", reason: "接口调用异常，默认通过" }; 
+
                 const data = await response.json();
                 if (data.choices && data.choices.length > 0) {
                     let content = data.choices[0].message.content.trim();
                     content = content.replace(/^```json/, '').replace(/^```/, '').replace(/```$/, '');
-                    return JSON.parse(content);
+                    try {
+                        return JSON.parse(content);
+                    } catch (e) {
+                        return { result: "MATCH", reason: "结果解析异常，默认通过" }; 
+                    }
                 }
             } catch (error) {
-                console.error(error);
+                console.error("Error calling Ark LLM:", error);
             }
-            return { result: "MATCH", reason: "异常通过" };
+            return { result: "MATCH", reason: "请求错误，默认通过" }; 
         }
 
         async function generateScene(mode) {
@@ -511,6 +571,7 @@
             desc.innerText = "AI正在分析您的需求...";
             
             const matchData = await checkCommunityMatch(kw, currentType);
+            
             let matchResult = matchData.result;
             if (matchResult === "MISMATCH" && matchData.suggestion && matchData.suggestion.includes(currentType.name)) {
                 matchResult = "MATCH";
@@ -518,21 +579,29 @@
             
             if (matchResult === "MISMATCH") {
                 loading.style.display = 'none';
-                alert(`您的描述【${kw}】与当前【${currentType.name}】不匹配。\n\nAI建议：\n您似乎更倾向于【${matchData.suggestion || "其他类型"}】。\n理由：${matchData.reason}\n\n请修改描述或返回选择对应的社区。`);
+                const suggestion = matchData.suggestion || "其他社区类型";
+                const reason = matchData.reason || "描述与当前类型不符";
+                
+                alert(`您的描述【${kw}】与当前【${currentType.name}】不匹配。\n\nAI建议：\n您似乎更倾向于【${suggestion}】。\n理由：${reason}\n\n请返回选择该社区类型，或修改您的描述。`);
                 return;
             }
             
-            let prompt = mode === '3d' 
-                ? `高质量三维仿真图，${currentType.name}：${kw}，建筑规划，绿化环境，真实的阳光光影，城市规划视角，清晰结构，无文字`
-                : `建筑规划平面图，设计图纸风格，${currentType.name}：${kw}，俯视图视角，清晰的区域划分与建筑布局，专业图纸，无文字`;
+            let prompt = "";
+            if (mode === '3d') {
+                prompt = `高质量三维仿真图，${currentType.name}：${kw}，建筑规划，绿化环境，真实的阳光光影，城市规划视角，清晰结构，无文字`;
+            } else {
+                prompt = `建筑规划平面图，设计图纸风格，${currentType.name}：${kw}，俯视图视角，清晰的区域划分与建筑布局，专业图纸，无文字`;
+            }
 
-            desc.innerText = `正在生成【${kw}】的${mode === '3d' ? '三维模拟' : '规划图'}...\n(请耐心等待)`;
+            desc.innerText = `正在生成【${kw}】的${mode === '3d' ? '三维模拟' : '规划图'}...\n(首次请求可能需要几秒)`;
 
             try {
                 const imageUrl = await callVolcengineAPI(prompt);
+                
                 canvas.style.display = 'none';
                 resultImg.src = imageUrl;
                 resultImg.style.display = 'block';
+                
                 desc.innerText = `【${kw}】${mode === '3d' ? '三维模拟' : '规划图'}\n已通过即梦文生图API生成`;
             } catch (e) {
                 console.error(e);
@@ -554,8 +623,11 @@
                 ctx.lineWidth = 2;
                 ctx.strokeRect(5, 5, w-10, h-10);
 
-                if (mode === '3d') draw3DSim(ctx, w, h, kw);
-                else drawPlanSim(ctx, w, h, kw);
+                if (mode === '3d') {
+                    draw3DSim(ctx, w, h, kw);
+                } else {
+                    drawPlanSim(ctx, w, h, kw);
+                }
                 
                 desc.innerText = `【${kw}】${mode === '3d' ? '三维模拟' : '规划图'}\n(回退到本地模拟：${e.message})`;
             } finally {
@@ -566,49 +638,81 @@
         function draw3DSim(ctx, w, h, kw) {
             let seed = 0;
             for (let i = 0; i < kw.length; i++) seed = ((seed << 5) - seed) + kw.charCodeAt(i);
-            const rng = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+            const rng = () => {
+                seed = (seed * 9301 + 49297) % 233280;
+                return seed / 233280;
+            };
 
             const skyGrad = ctx.createLinearGradient(0, 0, 0, h*0.5);
-            skyGrad.addColorStop(0, "#001a33"); skyGrad.addColorStop(1, "#004d99");
-            ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, w, h*0.5); 
-            ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0, h*0.5, w, h*0.5); 
+            skyGrad.addColorStop(0, "#001a33");
+            skyGrad.addColorStop(1, "#004d99");
+            ctx.fillStyle = skyGrad; 
+            ctx.fillRect(0, 0, w, h*0.5); 
+            
+            ctx.fillStyle = "#1a1a1a"; 
+            ctx.fillRect(0, h*0.5, w, h*0.5); 
             
             ctx.strokeStyle = "rgba(0, 255, 255, 0.2)";
             ctx.lineWidth = 1;
             for(let i=0; i<20; i++) {
-                ctx.beginPath(); ctx.moveTo(w/2, h*0.5); ctx.lineTo(w * (i/10 - 0.5), h); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(0, h*0.5 + i*20); ctx.lineTo(w, h*0.5 + i*20); ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(w/2, h*0.5);
+                ctx.lineTo(w * (i/10 - 0.5), h);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, h*0.5 + i*20);
+                ctx.lineTo(w, h*0.5 + i*20);
+                ctx.stroke();
             }
 
             for (let i = 0; i < 3 + Math.floor(rng() * 3); i++) {
-                const bx = w * (0.2 + rng() * 0.6), by = h * (0.3 + rng() * 0.1);
-                const bw = 50 + rng() * 40, bh = 80 + rng() * 80;
-                drawSimBuilding(ctx, bx, by, bw, bh, `hsl(${rng() * 360}, 60%, 40%)`);
+                const bx = w * (0.2 + rng() * 0.6);
+                const by = h * (0.3 + rng() * 0.1);
+                const bw = 50 + rng() * 40;
+                const bh = 80 + rng() * 80;
+                const color = `hsl(${rng() * 360}, 60%, 40%)`;
+                drawSimBuilding(ctx, bx, by, bw, bh, color);
             }
 
-            ctx.strokeStyle = "#00FFFF"; ctx.lineWidth = 2; ctx.strokeRect(10, 10, 20, 20); 
-            ctx.fillStyle = "#00FFFF"; ctx.font = "10px monospace"; ctx.fillText("SIM_ACTIVE", 40, 25);
+            ctx.strokeStyle = "#00FFFF";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(10, 10, 20, 20);
+            ctx.fillStyle = "#00FFFF";
+            ctx.font = "10px monospace";
+            ctx.fillText("SIM_ACTIVE", 40, 25);
         }
 
         function drawSimBuilding(ctx, x, y, bw, bh, color) {
-            ctx.fillStyle = color; ctx.fillRect(x, y, bw, bh);
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, bw, bh);
+            
             ctx.fillStyle = "rgba(0,0,0,0.3)";
-            ctx.beginPath(); ctx.moveTo(x+bw, y); ctx.lineTo(x+bw+20, y-10);
-            ctx.lineTo(x+bw+20, y+bh-10); ctx.lineTo(x+bw, y+bh); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x+bw, y); ctx.lineTo(x+bw+20, y-10);
+            ctx.lineTo(x+bw+20, y+bh-10); ctx.lineTo(x+bw, y+bh);
+            ctx.fill();
+            
             ctx.fillStyle = "rgba(255,255,255,0.2)";
-            ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x+20, y-10);
-            ctx.lineTo(x+bw+20, y-10); ctx.lineTo(x+bw, y); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x, y); ctx.lineTo(x+20, y-10);
+            ctx.lineTo(x+bw+20, y-10); ctx.lineTo(x+bw, y);
+            ctx.fill();
 
             ctx.fillStyle = "rgba(0, 255, 255, 0.4)";
             for(let r=1; r<bh/20; r++) {
-                for(let c=1; c<bw/15; c++) ctx.fillRect(x + c*15-5, y + r*20-5, 6, 8);
+                for(let c=1; c<bw/15; c++) {
+                    ctx.fillRect(x + c*15-5, y + r*20-5, 6, 8);
+                }
             }
         }
 
         function drawPlanSim(ctx, w, h, kw) {
             let seed = 0;
             for (let i = 0; i < kw.length; i++) seed = ((seed << 5) - seed) + kw.charCodeAt(i);
-            const rng = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+            const rng = () => {
+                seed = (seed * 9301 + 49297) % 233280;
+                return seed / 233280;
+            };
 
             ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, w, h);
             ctx.strokeStyle = "#7f8c8d"; ctx.lineWidth = 10;
@@ -616,10 +720,14 @@
             
             for (let i = 0; i < 5 + Math.floor(rng() * 5); i++) {
                 ctx.fillStyle = `hsl(${rng() * 360}, 60%, 50%)`;
-                ctx.beginPath(); ctx.arc(w * (0.2 + rng() * 0.6), h * (0.2 + rng() * 0.6), 15, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); 
+                ctx.arc(w * (0.2 + rng() * 0.6), h * (0.2 + rng() * 0.6), 15, 0, Math.PI*2); 
+                ctx.fill();
             }
             
-            ctx.fillStyle = "#333"; ctx.font = "bold 14px SimSun"; ctx.textAlign = "center";
+            ctx.fillStyle = "#333";
+            ctx.font = "bold 14px SimSun";
+            ctx.textAlign = "center";
             ctx.fillText("基于语音/文字描述的动态规划图", w/2, h - 20);
         }
 
