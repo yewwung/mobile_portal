@@ -1,0 +1,1501 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>理想社区智慧建设系统 - 移动端</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #FDF5E6;
+            /* 叠加宣纸纹理 */
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(178, 34, 34, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(218, 165, 32, 0.05) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        /* 传统文化水印 */
+        body::before {
+            content: "德";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 300px;
+            color: rgba(178, 34, 34, 0.03);
+            font-family: "STKaiti", serif;
+            z-index: -1;
+        }
+        /* 复古祥云装饰 */
+        .cloud-dec {
+            position: fixed;
+            width: 100px;
+            height: 50px;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: -1;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 50' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 30 Q 25 10 40 30 T 70 30 T 90 30' stroke='%23DAA520' fill='none' stroke-width='2'/%3E%3C/svg%3E");
+        }
+        .c1 { top: 150px; left: 10px; }
+        .c2 { top: 400px; right: 10px; transform: scaleX(-1); }
+        
+        /* 红色印章 */
+        .seal {
+            position: fixed;
+            bottom: 150px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border: 2px solid #B22222;
+            color: #B22222;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+            opacity: 0.3;
+            font-family: "STKaiti";
+            z-index: -1;
+        }
+        .header {
+            background-color: #B22222;
+            color: #FFD700;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 3px solid #DAA520;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .header h1 { margin: 0; font-size: 20px; letter-spacing: 1px; font-family: 'SimSun', serif; }
+        .header p { margin: 5px 0 0; font-size: 11px; color: white; opacity: 0.9; }
+        
+        .container { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+        
+        .page { display: none; flex-direction: column; animation: slideUp 0.4s ease-out; }
+        .page.active { display: flex; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .welcome { text-align: center; color: #B22222; font-size: 18px; font-weight: bold; margin-bottom: 8px; text-shadow: 1px 1px 0 rgba(255,255,255,0.5); }
+        .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 20px; }
+
+        /* 社区卡片增强 */
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-left: 8px solid;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::after {
+            content: "";
+            position: absolute;
+            right: -10px; bottom: -10px;
+            width: 50px; height: 50px;
+            background: currentColor;
+            opacity: 0.05;
+            border-radius: 50%;
+        }
+        .card h3 { margin: 0; font-size: 17px; }
+        .card p { margin: 6px 0 0; font-size: 12px; color: #666; }
+        
+        .functional { border-color: #3498db; color: #3498db; }
+        .atmospheric { border-color: #e67e22; color: #e67e22; }
+        .governance { border-color: #B22222; color: #B22222; }
+        .environment { border-color: #2E7D32; color: #2E7D32; }
+
+        /* 生成器界面增强 */
+        .generator-box { 
+            background: rgba(255, 255, 255, 0.95); 
+            border-radius: 15px; 
+            padding: 20px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 1px solid #DAA520;
+            position: relative;
+        }
+        /* 智能科技装饰角 */
+        .generator-box::before {
+            content: "";
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border: 1px solid rgba(178, 34, 34, 0.1);
+            pointer-events: none;
+            border-radius: 10px;
+        }
+        
+        .input-group { display: flex; gap: 8px; margin-bottom: 15px; position: relative; z-index: 1; align-items: center; }
+        input { flex: 1; padding: 12px; border: 2px solid #B22222; border-radius: 8px; font-size: 14px; outline: none; background: white; }
+        button { padding: 8px 18px; background: #B22222; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 10px rgba(178, 34, 34, 0.2); }
+        .btn-outline { background: white; border: 2px solid #B22222; color: #B22222; margin-top: 12px; width: 100%; font-size: 14px; }
+        button:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+        
+        canvas { 
+            width: 100%; 
+            height: 220px; 
+            background: #fff; 
+            border: 1px solid #eee; 
+            border-radius: 10px;
+            margin-bottom: 12px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .canvas-desc { font-size: 13px; color: #444; text-align: center; line-height: 1.6; background: #fdfcf0; padding: 10px; border-radius: 6px; }
+
+        /* API 加载动画与结果图样式 */
+        .spinner { width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid #B22222; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #scene-result { display: none; width: 100%; height: 220px; border-radius: 10px; object-fit: cover; margin-bottom: 12px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
+        .canvas-container { position: relative; }
+        #loading-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 220px; background: rgba(255,255,255,0.9); border-radius: 10px; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+
+        .footer {
+            padding: 20px;
+            background-color: rgba(178, 34, 34, 0.05);
+            border-top: 1px dashed #B22222;
+            text-align: center;
+            font-size: 13px;
+            color: #555;
+            font-style: italic;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="birds"></div>
+    <div class="cloud-dec c1"></div>
+    <div class="cloud-dec c2"></div>
+    <div class="seal">立德<br>树人</div>
+    <div class="header">
+        <h1 id="header-title">立德树人 · 培根铸魂</h1>
+        <p>培养新时代合格建设者</p>
+    </div>
+
+    <div class="container">
+        <div id="page-generator" class="page active">
+            <div class="welcome" id="gen-title">社区理想蓝图生成</div>
+            <div class="subtitle">扫码后直接输入关键词，系统将自动识别社区类型并检索最相关图片</div>
+                <div class="generator-box">
+                    <div class="input-group">
+                        <input type="text" id="keyword-input" placeholder="请输入社区建设需求关键词（如：绿色、养老、互助、智慧治理）">
+                    </div>
+                    <div class="canvas-container">
+                        <canvas id="scene-canvas"></canvas>
+                        <img id="scene-result" alt="生成结果">
+                    <div id="loading-overlay">
+                        <div class="spinner"></div>
+                        <div style="margin-top:10px;font-size:12px;color:#B22222;font-weight:bold;">AI正在检索图片...</div>
+                    </div>
+                </div>
+                <div class="canvas-desc" id="scene-desc">请输入关键词并点击“综合规划蓝图”</div>
+                <button class="btn-outline" onclick="generateScene()">综合规划蓝图</button>
+                <button id="save-btn" class="btn-outline" style="border-color: #3498db; color: #3498db;" onclick="saveImage()" disabled>保存图片</button>
+                <button class="btn-outline" style="border-color: #666; color: #666;" onclick="resetGenerator()">清空重输</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        “博学之，审问之，慎思之，明辨之，笃行之。”
+    </div>
+
+    <script>
+        // 调试信息：如果页面加载缓慢，显示在控制台或界面
+        console.log("Mobile Portal Loaded. Target PC IP: " + location.hostname);
+
+        const COMMUNITY_TYPES = {
+            functional: { id: 'functional', name: "功能型社区", color: "#3498db", keywords: ["功能", "服务", "便捷", "康养", "医养", "儿童", "游乐", "交通", "宠物公园"] },
+            atmospheric: { id: 'atmospheric', name: "氛围型社区", color: "#e67e22", keywords: ["氛围", "和谐", "邻里", "互助", "共享", "文化墙", "楼盘", "休闲", "宠物"] },
+            governance: { id: 'governance', name: "治理方式型社区", color: "#B22222", keywords: ["治理", "智管", "调度", "可视化", "孪生", "科技", "指挥", "数据", "平台"] },
+            environment: { id: 'environment', name: "环境需求型社区", color: "#2E7D32", keywords: ["环境", "生态", "园林", "水景", "绿意", "乡村", "宜居", "社区", "现代"] }
+        };
+        const COMMUNITY_TYPE_LIST = Object.values(COMMUNITY_TYPES);
+        const COMMUNITY_TYPE_NAME_MAP = COMMUNITY_TYPE_LIST.reduce((acc, item) => {
+            acc[item.name] = item.id;
+            return acc;
+        }, {});
+        const IMAGE_ROOT_DIRS = ['图片集', '图片集文件'];
+        const COMMUNITY_IMAGE_LIBRARY = {
+            functional: [
+                { theme: '规划', file: '规划.jpg', keywords: ['平面图', '服务站', '功能室', '布局', '社区'] },
+                { theme: '康养', file: '康养.jpg', keywords: ['康养', '适老', '轴测图', '温室', '医养'] },
+                { theme: '童趣', file: '童趣.jpg', keywords: ['游乐场', '塑胶地坪', '住宅区', '滑梯', '雕塑'] },
+                { theme: '宠物', file: '宠物.jpg', keywords: ['宠物公园', '训练设施', '围栏', '跑道', '草地'] },
+                { theme: '活力', file: '活力.jpg', keywords: ['鸟瞰图', '塑胶跑道', '游乐区', '绿化', '高层住宅'] },
+                { theme: '休闲', file: '休闲.jpg', keywords: ['跑道', '健身器材', '遮阳伞', '休闲座椅', '绿植'] },
+                { theme: '设计', file: '设计.jpg', keywords: ['展板', '效果图', '分析图', '景观设计', '植物配置'] },
+                { theme: '童乐', file: '童乐.jpg', keywords: ['攀岩墙', '沙坑', '儿童', '效果图', '树木'] },
+                { theme: '交通', file: '交通.jpg', keywords: ['公交车', '自行车道', '街道', '行道树', '行人'] }
+            ],
+            atmospheric: [
+                { theme: '宜居', file: '宜居.jpg', keywords: ['遛狗', '消防栓', '步道', '居民', '夕阳'] },
+                { theme: '和谐', file: '和谐.jpg', keywords: ['广场', '老人', '儿童', '长廊', '健身器材'] },
+                { theme: '服务', file: '服务.jpg', keywords: ['服务中心', '招牌', '遮阳伞', '现代建筑', '绿化带'] },
+                { theme: '宠物', file: '宠物.jpg', keywords: ['宠物狗', '门禁', '骨头图标', '猫抓板', '步道'] },
+                { theme: '楼盘', file: '楼盘.jpg', keywords: ['高层住宅', '下沉广场', '会所', '绿化景观', '效果图'] },
+                { theme: '文化墙', file: '文化墙.jpg', keywords: ['墙绘', '街道', '围墙', '传统元素', '雨后'] },
+                { theme: '互助', file: '互助.jpg', keywords: ['下棋', '宣传栏', '孩童', '健身区', '阳光'] },
+                { theme: '休闲', file: '休闲.jpg', keywords: ['跑道', '健身器材', '遮阳伞', '休闲座椅', '绿植'] },
+                { theme: '共享', file: '共享.jpg', keywords: ['游乐设施', '塑胶场地', '文化长廊', '花坛', '邻里'] }
+            ],
+            governance: [
+                { theme: '智管', file: '智管.jpg', keywords: ['大屏面板', '3D模型', '图表', '数据分析', '智慧社区'] },
+                { theme: '调度', file: '调度.jpg', keywords: ['电子地图', '调度平台', '统计数据', '坐标点', '指挥系统'] },
+                { theme: '便捷', file: '便捷.jpg', keywords: ['智能手机', '便民应用', '生活服务', '定位图标', '网络'] },
+                { theme: '可视', file: '可视.jpg', keywords: ['可视化', '三维街景', '视频监控', '数据看板', '楼宇'] },
+                { theme: '互联', file: '互联.jpg', keywords: ['小区模型', '智能设施', '功能标签', '鸟瞰', '系统网络'] },
+                { theme: '指挥', file: '指挥.jpg', keywords: ['指挥中心', '大屏幕', '监控墙', '工作人员', '调度台'] },
+                { theme: '孪生', file: '孪生.jpg', keywords: ['数字孪生', '虚拟社区', '控制菜单', '全景图', '平台界面'] },
+                { theme: '科技', file: '科技.jpg', keywords: ['人工智能', '大脑芯片', '城市天际线', '连接图标', '数据流'] }
+            ],
+            environment: [
+                { theme: '社区', file: '社区.jpg', keywords: ['住宅', '步道', '凉亭', '绿化', '行人'] },
+                { theme: '乡村', file: '乡村.jpg', keywords: ['鸟瞰', '村落', '田野', '树林', '夕阳'] },
+                { theme: '规划', file: '规划.jpg', keywords: ['平面图', '布局', '图例', '公共空间', '绿化带'] },
+                { theme: '宜居', file: '宜居.jpg', keywords: ['住宅楼', '草坪', '凉亭', '小径', '树木'] },
+                { theme: '现代', file: '现代.jpg', keywords: ['现代建筑', '阳台绿化', '街道', '玻璃护栏', '绿篱'] },
+                { theme: '氧吧', file: '氧吧.jpg', keywords: ['效果图', '树林', '花草', '儿童', '生态'] },
+                { theme: '园林', file: '园林.jpg', keywords: ['俯瞰', '水系', '园林', '步道', '广场'] },
+                { theme: '水景', file: '水景.jpg', altFiles: ['水井.jpg'], keywords: ['木桥', '溪流', '住宅', '鲜花', '居民'] },
+                { theme: '绿意', file: '绿意.jpg', keywords: ['阳光', '草坪', '树木', '光影', '庭院'] }
+            ]
+        };
+
+        let lastDetectedType = null;
+
+        const queryParams = new URLSearchParams(window.location.search);
+        const isLocalPortalPage = /^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(window.location.hostname);
+        const portalBridgeBaseUrl = ((queryParams.get('pc') || '').trim() || (isLocalPortalPage ? window.location.origin : '')).replace(/\/$/, '');
+        const imageBaseOverride = (
+            queryParams.get('img_base')
+            || queryParams.get('imgBase')
+            || ''
+        ).trim().replace(/\/$/, '');
+
+        function getGithubRepoInfo() {
+            const hostMatch = String(window.location.hostname || '').match(/^([^.]+)\.github\.io$/i);
+            const pathParts = String(window.location.pathname || '').split('/').filter(Boolean);
+            if (!hostMatch || !pathParts.length) {
+                return null;
+            }
+            return {
+                owner: hostMatch[1],
+                repo: pathParts[0]
+            };
+        }
+
+        function buildImageBaseUrls() {
+            const bases = [];
+            const pushUnique = (value) => {
+                const normalized = String(value || '').trim().replace(/\/$/, '');
+                if (normalized && !bases.includes(normalized)) {
+                    bases.push(normalized);
+                }
+            };
+
+            pushUnique(imageBaseOverride);
+            pushUnique(portalBridgeBaseUrl);
+            pushUnique(new URL('.', window.location.href).href);
+
+            const repoInfo = getGithubRepoInfo();
+            if (repoInfo) {
+                pushUnique(`${window.location.origin}/${repoInfo.repo}`);
+                pushUnique(`https://cdn.jsdelivr.net/gh/${repoInfo.owner}/${repoInfo.repo}@main`);
+                pushUnique(`https://cdn.jsdelivr.net/gh/${repoInfo.owner}/${repoInfo.repo}@master`);
+                pushUnique(`https://raw.githubusercontent.com/${repoInfo.owner}/${repoInfo.repo}/main`);
+                pushUnique(`https://raw.githubusercontent.com/${repoInfo.owner}/${repoInfo.repo}/master`);
+            }
+
+            return bases;
+        }
+
+        const IMAGE_BASE_URLS = buildImageBaseUrls();
+
+        function getDefaultKeywordPlaceholder() {
+            return "请输入社区建设需求关键词（如：绿色、养老、互助、智慧治理）";
+        }
+
+        function resetGenerator() {
+            lastDetectedType = null;
+
+            const input = document.getElementById('keyword-input');
+            const resultImg = document.getElementById('scene-result');
+            const canvas = document.getElementById('scene-canvas');
+            const desc = document.getElementById('scene-desc');
+            const loading = document.getElementById('loading-overlay');
+
+            if (input) {
+                input.value = "";
+                input.placeholder = getDefaultKeywordPlaceholder();
+            }
+            if (resultImg) {
+                resultImg.style.display = 'none';
+                resultImg.src = "";
+            }
+            if (canvas) {
+                canvas.style.display = 'block';
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            if (loading) {
+                loading.style.display = 'none';
+            }
+            if (desc) {
+                desc.innerText = "请输入关键词并点击“综合规划蓝图”";
+            }
+            setSaveEnabled(false);
+        }
+
+        function setSaveEnabled(enabled) {
+            const saveBtn = document.getElementById('save-btn');
+            if (saveBtn) {
+                saveBtn.disabled = !enabled;
+            }
+        }
+
+        function canvasToJpegBlob(canvas, quality = 0.92) {
+            return new Promise(resolve => {
+                canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
+            });
+        }
+
+        function waitForImageReady(imageEl, timeoutMs = 3500) {
+            return new Promise(resolve => {
+                if (imageEl && imageEl.complete && imageEl.naturalWidth > 0) {
+                    resolve(true);
+                    return;
+                }
+                if (!imageEl) {
+                    resolve(false);
+                    return;
+                }
+
+                let finished = false;
+                const done = (ok) => {
+                    if (!finished) {
+                        finished = true;
+                        imageEl.removeEventListener('load', onLoad);
+                        imageEl.removeEventListener('error', onError);
+                        resolve(ok);
+                    }
+                };
+                const onLoad = () => done(true);
+                const onError = () => done(false);
+                imageEl.addEventListener('load', onLoad, { once: true });
+                imageEl.addEventListener('error', onError, { once: true });
+                setTimeout(() => done(false), timeoutMs);
+            });
+        }
+
+        async function imageToJpegBlob(imageEl, quality = 0.92) {
+            if (!imageEl || !imageEl.naturalWidth || !imageEl.naturalHeight) {
+                return null;
+            }
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = imageEl.naturalWidth;
+            tempCanvas.height = imageEl.naturalHeight;
+            const ctx = tempCanvas.getContext('2d');
+            ctx.drawImage(imageEl, 0, 0);
+            return await canvasToJpegBlob(tempCanvas, quality);
+        }
+
+        async function blobToJpegBlob(blob, quality = 0.92) {
+            if (!blob || !blob.size) {
+                return null;
+            }
+            if (String(blob.type || '').toLowerCase() === 'image/jpeg') {
+                return blob;
+            }
+
+            const url = URL.createObjectURL(blob);
+            try {
+                const img = new Image();
+                const loaded = await new Promise(resolve => {
+                    img.onload = () => resolve(true);
+                    img.onerror = () => resolve(false);
+                    img.src = url;
+                    setTimeout(() => resolve(false), 3500);
+                });
+                if (!loaded) {
+                    return blob;
+                }
+                const jpgBlob = await imageToJpegBlob(img, quality);
+                return jpgBlob || blob;
+            } finally {
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        function downloadBlobAsFile(blob, fileName) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 3000);
+        }
+
+        function downloadUrlAsFile(url, fileName) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        async function saveImage() {
+            const resultImg = document.getElementById('scene-result');
+            const canvas = document.getElementById('scene-canvas');
+            const saveBtn = document.getElementById('save-btn');
+            
+            let imageBlob = null;
+            const typeName = lastDetectedType?.name || '自动识别';
+            const fileName = `理想社区_${typeName}_${new Date().getTime()}.jpg`;
+
+            if (saveBtn && saveBtn.disabled) {
+                alert("当前没有可保存的图片，请先点击“综合规划蓝图”生成结果。");
+                return;
+            }
+
+            if (resultImg.style.display !== 'none' && resultImg.src) {
+                await waitForImageReady(resultImg, 3500);
+                try {
+                    imageBlob = await imageToJpegBlob(resultImg, 0.92);
+                } catch (error) {
+                    console.warn('图片转 JPG 失败，尝试使用原图下载:', error);
+                }
+
+                if (!imageBlob) {
+                    try {
+                        const resp = await fetch(resultImg.src, { cache: 'no-store' });
+                        if (resp.ok) {
+                            imageBlob = await blobToJpegBlob(await resp.blob(), 0.92);
+                        }
+                    } catch (error) {
+                        console.warn('拉取当前图片失败:', error);
+                    }
+                }
+            } else {
+                if (canvas && canvas.width > 0 && canvas.height > 0) {
+                    imageBlob = await canvasToJpegBlob(canvas, 0.92);
+                }
+            }
+
+            if (imageBlob && imageBlob.size) {
+                downloadBlobAsFile(imageBlob, fileName);
+                return;
+            }
+
+            if (resultImg && resultImg.src) {
+                downloadUrlAsFile(resultImg.src, fileName);
+                return;
+            }
+
+            alert("当前图片尚未完成生成，请稍后再试。");
+        }
+
+        const ARK_API_KEY = '173aa29f-0450-421a-936b-338d2851c458';
+        const ARK_CHAT_URL = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
+        const ARK_MODEL = "deepseek-v3-2-251201";
+        const FOLDER_BY_TYPE = {
+            functional: '功能型',
+            atmospheric: '氛围型',
+            governance: '治理型',
+            environment: '环境需求型'
+        };
+
+        function normalizeModelJson(content) {
+            if (!content) return '';
+            return content.trim().replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
+        }
+
+        function mapTypeTextToId(rawType = '') {
+            const text = String(rawType || '').replace(/\s+/g, '');
+            if (!text) return null;
+            const lowerText = text.toLowerCase();
+            if (COMMUNITY_TYPES[lowerText]) return lowerText;
+            if (COMMUNITY_TYPE_NAME_MAP[text]) return COMMUNITY_TYPE_NAME_MAP[text];
+            if (text.includes('功能')) return 'functional';
+            if (text.includes('氛围') || text.includes('文化') || text.includes('和谐')) return 'atmospheric';
+            if (text.includes('治理') || text.includes('参与') || text.includes('透明') || text.includes('高效')) return 'governance';
+            if (text.includes('环境') || text.includes('生态') || text.includes('低碳') || text.includes('宜居')) return 'environment';
+            return null;
+        }
+
+        function fallbackClassifyCommunityType(userInput) {
+            const text = String(userInput || '').toLowerCase();
+            let bestType = COMMUNITY_TYPE_LIST[0];
+            let bestScore = -1;
+
+            COMMUNITY_TYPE_LIST.forEach(type => {
+                let score = 0;
+                type.keywords.forEach(word => {
+                    if (text.includes(word.toLowerCase())) {
+                        score += 3;
+                    }
+                });
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestType = type;
+                }
+            });
+
+            const reason = bestScore > 0
+                ? `规则匹配到关键词，自动归类为${bestType.name}`
+                : `未命中明显关键词，默认归类为${bestType.name}`;
+            return { typeId: bestType.id, reason, source: 'rule' };
+        }
+
+        async function callArkJson(systemPrompt, userPrompt, temperature = 0.1) {
+            const response = await fetch(ARK_CHAT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${ARK_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: ARK_MODEL,
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userPrompt }
+                    ],
+                    temperature
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Ark API 调用失败: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const content = data?.choices?.[0]?.message?.content;
+            if (!content) {
+                throw new Error('Ark API 未返回有效内容');
+            }
+            const cleaned = normalizeModelJson(content);
+            return JSON.parse(cleaned);
+        }
+
+        async function classifyCommunityType(userInput) {
+            const fallback = fallbackClassifyCommunityType(userInput);
+            const systemPrompt = `你是社区类型分类助手。请根据用户输入，将其归类到以下四类之一：
+1. 功能型社区
+2. 氛围型社区
+3. 治理方式型社区
+4. 环境需求型社区
+
+仅返回 JSON，不要输出其他文本。格式：
+{"type":"四类之一的名称","reason":"不超过30字的理由"}`;
+
+            try {
+                const data = await callArkJson(systemPrompt, userInput, 0.1);
+                const typeId = mapTypeTextToId(data.type);
+                if (!typeId) {
+                    throw new Error('模型返回了未知类型');
+                }
+                return {
+                    typeId,
+                    reason: data.reason || `模型判定为${COMMUNITY_TYPES[typeId].name}`,
+                    source: 'llm'
+                };
+            } catch (error) {
+                console.warn('类型识别回退到规则:', error);
+                return fallback;
+            }
+        }
+
+        function buildCandidatesByType(typeId) {
+            const folderName = FOLDER_BY_TYPE[typeId];
+            const candidates = COMMUNITY_IMAGE_LIBRARY[typeId] || [];
+            return candidates.map((item, index) => ({
+                index,
+                candidateId: `${typeId}-${index}`,
+                typeId,
+                typeName: COMMUNITY_TYPES[typeId]?.name || typeId,
+                folderName,
+                theme: item.theme || item.file.replace(/\.[^.]+$/, ''),
+                file: item.file,
+                altFiles: item.altFiles || [],
+                keywords: item.keywords || item.tags || [],
+                tags: item.keywords || item.tags || []
+            }));
+        }
+
+        function buildAllCandidates() {
+            return Object.keys(COMMUNITY_IMAGE_LIBRARY).reduce((all, typeId) => {
+                return all.concat(buildCandidatesByType(typeId));
+            }, []);
+        }
+
+        function normalizeSearchText(text) {
+            return String(text || '')
+                .toLowerCase()
+                .replace(/\s+/g, '')
+                .replace(/[，,。.!！?？;；:：、\-_/\\()[\]{}"'`~]/g, '');
+        }
+
+        function splitSearchTerms(text) {
+            return String(text || '')
+                .split(/[，,。.!！?？;；:：、\s]+/)
+                .map(s => s.trim())
+                .filter(Boolean);
+        }
+
+        function isKeywordMatched(userInput, keyword) {
+            const userNorm = normalizeSearchText(userInput);
+            const keyNorm = normalizeSearchText(keyword);
+            if (!userNorm || !keyNorm) return false;
+            return userNorm.includes(keyNorm) || keyNorm.includes(userNorm);
+        }
+
+        function findMatchedKeywords(userInput, candidate) {
+            return (candidate.keywords || []).filter(keyword => isKeywordMatched(userInput, keyword));
+        }
+
+        function collectThemeKeywordMatches(userInput, candidates) {
+            const terms = Array.from(new Set([userInput, ...splitSearchTerms(userInput)]));
+            const results = [];
+
+            (candidates || []).forEach(candidate => {
+                const themeMatched = terms.some(term => isKeywordMatched(term, candidate.theme));
+                const keywordMatches = (candidate.keywords || []).filter(keyword =>
+                    terms.some(term => isKeywordMatched(term, keyword))
+                );
+                if (themeMatched || keywordMatches.length) {
+                    results.push({ candidate, themeMatched, keywordMatches });
+                }
+            });
+            return results;
+        }
+
+        function scoreCandidateByRule(userInput, candidate, typeInfo = COMMUNITY_TYPES[candidate.typeId]) {
+            let score = 0;
+
+            if (typeInfo) {
+                if (isKeywordMatched(userInput, typeInfo.name)) {
+                    score += 3;
+                }
+                typeInfo.keywords.forEach(keyword => {
+                    if (isKeywordMatched(userInput, keyword)) {
+                        score += 2;
+                    }
+                });
+            }
+
+            if (isKeywordMatched(userInput, candidate.theme)) {
+                score += 6;
+            }
+
+            candidate.keywords.forEach(keyword => {
+                if (isKeywordMatched(userInput, keyword)) {
+                    score += 4;
+                }
+            });
+
+            if (isKeywordMatched(userInput, String(candidate.file || '').replace(/\.[^.]+$/, ''))) {
+                score += 3;
+            }
+            return score;
+        }
+
+        function findCandidateByThemeAndKeywords(candidates, matchedType, matchedTheme, matchedKeywords, userInput) {
+            if (!candidates.length) {
+                return null;
+            }
+
+            const matchedTypeId = mapTypeTextToId(matchedType);
+            const themeNorm = normalizeSearchText(matchedTheme);
+            const keywordList = Array.from(new Set([
+                ...(Array.isArray(matchedKeywords) ? matchedKeywords : []),
+                ...splitSearchTerms(userInput)
+            ]));
+
+            let scope = candidates;
+            if (matchedTypeId) {
+                const typeMatched = scope.filter(item => item.typeId === matchedTypeId);
+                if (typeMatched.length) {
+                    scope = typeMatched;
+                }
+            }
+            if (themeNorm) {
+                const themeMatched = scope.filter(item => {
+                    const itemTheme = normalizeSearchText(item.theme);
+                    return itemTheme && (itemTheme.includes(themeNorm) || themeNorm.includes(itemTheme));
+                });
+                if (themeMatched.length) {
+                    scope = themeMatched;
+                }
+            }
+
+            let best = null;
+            let bestScore = -1;
+            scope.forEach(item => {
+                const itemTheme = normalizeSearchText(item.theme);
+                let score = 0;
+
+                if (themeNorm && itemTheme && (itemTheme.includes(themeNorm) || themeNorm.includes(itemTheme))) {
+                    score += 10;
+                }
+
+                keywordList.forEach(keyword => {
+                    if (isKeywordMatched(keyword, item.theme)) {
+                        score += 6;
+                    }
+                    (item.keywords || []).forEach(itemKeyword => {
+                        if (isKeywordMatched(keyword, itemKeyword)) {
+                            score += 5;
+                        }
+                    });
+                });
+
+                if (score > bestScore) {
+                    best = item;
+                    bestScore = score;
+                }
+            });
+
+            if (bestScore <= 0) {
+                return null;
+            }
+            return best;
+        }
+
+        function pickCandidateByRule(userInput, candidates) {
+            if (!candidates.length) {
+                return { candidate: null, reason: '目录中没有候选图片', source: 'rule' };
+            }
+
+            let best = candidates[0];
+            let bestScore = scoreCandidateByRule(userInput, best);
+            for (let i = 1; i < candidates.length; i++) {
+                const current = candidates[i];
+                const currentScore = scoreCandidateByRule(userInput, current);
+                if (currentScore > bestScore) {
+                    best = current;
+                    bestScore = currentScore;
+                }
+            }
+            return {
+                candidate: best,
+                matchedKeywords: findMatchedKeywords(userInput, best),
+                reason: `规则评分最高（${bestScore}，主题：${best.theme}）`,
+                source: 'rule'
+            };
+        }
+
+        async function pickCandidateByLlm(userInput, candidates, typeInfo) {
+            const listText = candidates.map(item =>
+                `主题：${item.theme}；关键词：${item.keywords.join('、') || '无'}；文件：${item.file}${item.altFiles.length ? `（备选：${item.altFiles.join('、')}）` : ''}`
+            ).join('\n');
+
+            const systemPrompt = `你是图片语义检索助手。请根据用户输入，在候选对象的 theme 和 keywords 中检索最相似对象。
+只返回 JSON，不要其他文本。格式如下：
+{"matched_theme":"最相似主题","matched_keywords":["关键词1","关键词2"],"reason":"不超过30字"}。
+matched_theme 必须来自候选 theme。`;
+
+            const userPrompt = `社区类型：${typeInfo.name}
+用户关键词：${userInput}
+候选对象：
+${listText}`;
+
+            const data = await callArkJson(systemPrompt, userPrompt, 0.2);
+            const matchedTheme = String(data.matched_theme || data.theme || '').trim();
+            const matchedKeywords = Array.isArray(data.matched_keywords) ? data.matched_keywords.filter(Boolean) : [];
+
+            const candidate = findCandidateByThemeAndKeywords(candidates, matchedTheme, matchedKeywords, userInput);
+            if (!candidate) {
+                throw new Error('未找到与模型检索结果匹配的候选图片');
+            }
+
+            return {
+                candidate,
+                matchedTheme: matchedTheme || candidate.theme,
+                matchedKeywords: matchedKeywords.length ? matchedKeywords : findMatchedKeywords(userInput, candidate),
+                reason: data.reason || `语义检索命中主题：${candidate.theme}`,
+                source: 'llm'
+            };
+        }
+
+        function pickCandidateByRule(userInput, candidates) {
+            if (!candidates.length) {
+                return { candidate: null, reason: '规则检索未命中候选图片', source: 'rule' };
+            }
+
+            let best = candidates[0];
+            let bestScore = scoreCandidateByRule(userInput, best);
+            for (let i = 1; i < candidates.length; i++) {
+                const current = candidates[i];
+                const currentScore = scoreCandidateByRule(userInput, current);
+                if (currentScore > bestScore) {
+                    best = current;
+                    bestScore = currentScore;
+                }
+            }
+
+            if (bestScore <= 0) {
+                return {
+                    candidate: null,
+                    matchedKeywords: [],
+                    reason: '规则检索未命中相关 theme/keywords',
+                    source: 'rule'
+                };
+            }
+
+            return {
+                candidate: best,
+                matchedTheme: best.theme,
+                matchedKeywords: findMatchedKeywords(userInput, best),
+                reason: `规则回退命中：${best.typeName}/${best.theme}（评分${bestScore}）`,
+                source: 'rule'
+            };
+        }
+
+        async function pickCandidateByLlm(userInput, candidates) {
+            const listText = candidates.map(item =>
+                `ID:${item.candidateId}；社区类型：${item.typeName}；主题：${item.theme}；关键词：${item.keywords.join('、') || '无'}；文件：${item.file}${item.altFiles.length ? `（备选：${item.altFiles.join('、')}）` : ''}`
+            ).join('\n');
+
+            const systemPrompt = `你是社区图片语义检索助手。请理解用户关键词的真实含义，并在候选对象的社区类型、theme、keywords 中选择最相关的一项。
+如果没有足够相关的候选，请返回空结果。
+只返回 JSON，不要输出其他文本。格式如下：
+{"matched_candidate_id":"候选ID或空字符串","matched_type":"社区类型或空字符串","matched_theme":"主题或空字符串","matched_keywords":["关键词1","关键词2"],"reason":"不超过40字","need_reminder":false}
+matched_candidate_id 必须来自候选 ID；如果没有合适候选，matched_candidate_id 设为空字符串，need_reminder 设为 true。`;
+
+            const userPrompt = `用户关键词：${userInput}
+候选对象：
+${listText}`;
+
+            const data = await callArkJson(systemPrompt, userPrompt, 0.2);
+            const matchedCandidateId = String(data.matched_candidate_id || data.candidate_id || '').trim();
+            const matchedType = String(data.matched_type || data.type || '').trim();
+            const matchedTheme = String(data.matched_theme || data.theme || '').trim();
+            const matchedKeywords = Array.isArray(data.matched_keywords) ? data.matched_keywords.filter(Boolean) : [];
+            const needReminder = Boolean(data.need_reminder);
+
+            let candidate = candidates.find(item => item.candidateId === matchedCandidateId);
+            if (!candidate && (matchedType || matchedTheme || matchedKeywords.length)) {
+                candidate = findCandidateByThemeAndKeywords(candidates, matchedType, matchedTheme, matchedKeywords, userInput);
+            }
+
+            if (!candidate) {
+                return {
+                    candidate: null,
+                    matchedTheme,
+                    matchedKeywords,
+                    reason: data.reason || '未检索到高相关社区图片',
+                    source: 'llm',
+                    needReminder: needReminder || true
+                };
+            }
+
+            return {
+                candidate,
+                matchedTheme: matchedTheme || candidate.theme,
+                matchedKeywords: matchedKeywords.length ? matchedKeywords : findMatchedKeywords(userInput, candidate),
+                reason: data.reason || `语义检索命中主题：${candidate.typeName}/${candidate.theme}`,
+                source: 'llm',
+                needReminder
+            };
+        }
+
+        function buildImageUrlCandidates(rootDir, folderName, fileName) {
+            const relativePath = encodeURI(`${rootDir}/${folderName}/${fileName}`);
+            const candidates = [];
+            const pushUnique = (url) => {
+                if (url && !candidates.includes(url)) {
+                    candidates.push(url);
+                }
+            };
+
+            IMAGE_BASE_URLS.forEach(baseUrl => {
+                pushUnique(`${baseUrl}/${relativePath}`);
+            });
+            pushUnique(relativePath);
+            return candidates;
+        }
+
+        function getCandidateFileNames(candidate) {
+            const seedFiles = [candidate.file, ...(candidate.altFiles || [])].filter(Boolean);
+            const ordered = [];
+
+            const pushUnique = (name) => {
+                if (name && !ordered.includes(name)) {
+                    ordered.push(name);
+                }
+            };
+
+            seedFiles.forEach(name => {
+                const base = String(name).replace(/\.[^.]+$/, '');
+                pushUnique(`${base}.jpg`);
+                pushUnique(`${base}.jpeg`);
+            });
+            seedFiles.forEach(pushUnique);
+
+            return ordered;
+        }
+
+        function buildTimedImageUrl(url) {
+            return `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}`;
+        }
+
+        function probeImageUrl(url, timeoutMs = 8000) {
+            return new Promise(resolve => {
+                const img = new Image();
+                const timedUrl = buildTimedImageUrl(url);
+                let finished = false;
+                const done = (ok) => {
+                    if (!finished) {
+                        finished = true;
+                        resolve(ok ? timedUrl : null);
+                    }
+                };
+                img.decoding = 'async';
+                img.crossOrigin = 'anonymous';
+                img.referrerPolicy = 'no-referrer';
+                img.onload = () => done(true);
+                img.onerror = () => done(false);
+                setTimeout(() => done(false), timeoutMs);
+                img.src = timedUrl;
+            });
+        }
+
+        async function resolveCandidateImageUrl(candidate) {
+            const files = getCandidateFileNames(candidate);
+            for (const fileName of files) {
+                for (const root of IMAGE_ROOT_DIRS) {
+                    const urls = buildImageUrlCandidates(root, candidate.folderName, fileName);
+                    for (const url of urls) {
+                        const loadedUrl = await probeImageUrl(url, 8000);
+                        if (loadedUrl) {
+                            return { url: loadedUrl, root, fileName };
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        function showNoMatchReminder(canvas, resultImg, desc, keyword, typeInfo) {
+            if (resultImg) {
+                resultImg.style.display = 'none';
+                resultImg.src = '';
+            }
+
+            if (canvas) {
+                canvas.style.display = 'block';
+                const ctx = canvas.getContext('2d');
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                ctx.scale(dpr, dpr);
+                ctx.fillStyle = '#fdfcf0';
+                ctx.fillRect(0, 0, rect.width, rect.height);
+                ctx.strokeStyle = typeInfo.color;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(5, 5, rect.width - 10, rect.height - 10);
+                ctx.fillStyle = '#B22222';
+                ctx.textAlign = 'center';
+                ctx.font = 'bold 16px Microsoft YaHei';
+                ctx.fillText('关键词未匹配', rect.width / 2, rect.height / 2 - 10);
+                ctx.fillStyle = '#333';
+                ctx.font = '14px Microsoft YaHei';
+                ctx.fillText('请调整关键词后重新生成', rect.width / 2, rect.height / 2 + 20);
+            }
+
+            if (desc) {
+                desc.innerText = `提醒：关键词【${keyword}】未在【${typeInfo.name}】的 theme/keywords 中匹配到结果，请更换关键词后重试。`;
+            }
+            setSaveEnabled(false);
+        }
+
+        function renderLocalFallback(canvas, resultImg, keyword, typeInfo, reason) {
+            canvas.style.display = 'block';
+            resultImg.style.display = 'none';
+            resultImg.src = '';
+
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            const w = rect.width;
+            const h = rect.height;
+
+            ctx.fillStyle = "#fdfcf0";
+            ctx.fillRect(0, 0, w, h);
+            ctx.strokeStyle = typeInfo.color;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(5, 5, w - 10, h - 10);
+
+            drawPlanSim(ctx, w, h, keyword);
+            setSaveEnabled(true);
+            return `【${keyword}】自动判型：${typeInfo.name}\n未命中可用图片，已回退本地模拟：${reason}`;
+        }
+
+        async function generateScene() {
+            const kw = document.getElementById('keyword-input').value.trim();
+            if (!kw) return alert("请输入关键词");
+
+            const canvas = document.getElementById('scene-canvas');
+            const resultImg = document.getElementById('scene-result');
+            const loading = document.getElementById('loading-overlay');
+            const desc = document.getElementById('scene-desc');
+
+            setSaveEnabled(false);
+            loading.style.display = 'flex';
+            desc.innerText = "AI正在识别社区类型并检索图片...";
+
+            try {
+                const classify = await classifyCommunityType(kw);
+                const typeInfo = COMMUNITY_TYPES[classify.typeId] || COMMUNITY_TYPES.functional;
+                lastDetectedType = typeInfo;
+
+                const candidates = buildCandidatesByType(typeInfo.id);
+                if (!candidates.length) {
+                    desc.innerText = renderLocalFallback(canvas, resultImg, kw, typeInfo, '当前类型目录为空');
+                    return;
+                }
+
+                const directMatches = collectThemeKeywordMatches(kw, candidates);
+                if (!directMatches.length) {
+                    showNoMatchReminder(canvas, resultImg, desc, kw, typeInfo);
+                    return;
+                }
+
+                let picked = pickCandidateByRule(kw, candidates, typeInfo);
+                try {
+                    picked = await pickCandidateByLlm(kw, candidates, typeInfo);
+                } catch (error) {
+                    console.warn('大模型选图失败，回退规则选图:', error);
+                }
+
+                const pickedMatches = collectThemeKeywordMatches(kw, [picked.candidate]);
+                if (!pickedMatches.length) {
+                    showNoMatchReminder(canvas, resultImg, desc, kw, typeInfo);
+                    return;
+                }
+                if (!picked.matchedKeywords || !picked.matchedKeywords.length) {
+                    picked.matchedKeywords = pickedMatches[0].keywordMatches || [];
+                }
+
+                const imageHit = picked.candidate ? await resolveCandidateImageUrl(picked.candidate) : null;
+                if (!imageHit) {
+                    desc.innerText = renderLocalFallback(canvas, resultImg, kw, typeInfo, '目录图片不可访问');
+                    return;
+                }
+
+                canvas.style.display = 'none';
+                resultImg.src = imageHit.url;
+                resultImg.style.display = 'block';
+                setSaveEnabled(true);
+
+                const typeReason = classify.reason || `自动识别为${typeInfo.name}`;
+                const imageReason = picked.reason || '匹配度最高';
+                const matchedKeywords = Array.isArray(picked.matchedKeywords) ? picked.matchedKeywords.filter(Boolean) : [];
+                const semanticTheme = picked.matchedTheme || picked.candidate.theme;
+                desc.innerText = `关键词：${kw}
+社区类型：${typeInfo.name}
+判型依据：${typeReason}
+语义检索主题：${semanticTheme}
+命中目录：${imageHit.root}/${picked.candidate.folderName}
+命中主题：${picked.candidate.theme}
+命中图片：${imageHit.fileName}
+命中关键词：${matchedKeywords.length ? matchedKeywords.join('、') : '模型语义匹配'}
+选图依据：${imageReason}`;
+            } catch (error) {
+                console.error(error);
+                const fallbackType = lastDetectedType || COMMUNITY_TYPES.functional;
+                desc.innerText = renderLocalFallback(canvas, resultImg, kw, fallbackType, error.message || '未知错误');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function showNoMatchReminder(canvas, resultImg, desc, keyword, typeInfo = null, reason = '') {
+            const accentColor = typeInfo?.color || '#B22222';
+
+            if (resultImg) {
+                resultImg.style.display = 'none';
+                resultImg.src = '';
+            }
+
+            if (canvas) {
+                canvas.style.display = 'block';
+                const ctx = canvas.getContext('2d');
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                ctx.scale(dpr, dpr);
+                ctx.fillStyle = '#fdfcf0';
+                ctx.fillRect(0, 0, rect.width, rect.height);
+                ctx.strokeStyle = accentColor;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(5, 5, rect.width - 10, rect.height - 10);
+                ctx.fillStyle = '#B22222';
+                ctx.textAlign = 'center';
+                ctx.font = 'bold 16px Microsoft YaHei';
+                ctx.fillText('未检索到图片', rect.width / 2, rect.height / 2 - 10);
+                ctx.fillStyle = '#333';
+                ctx.font = '14px Microsoft YaHei';
+                ctx.fillText('请调整关键词后重新生成', rect.width / 2, rect.height / 2 + 20);
+            }
+
+            if (desc) {
+                desc.innerText = reason
+                    ? `提醒：关键词【${keyword}】暂未获取到可展示的社区图片。原因：${reason}`
+                    : `提醒：关键词【${keyword}】未在社区图库的 theme/keywords 中检索到相关结果，请更换关键词后重试。`;
+            }
+            setSaveEnabled(false);
+        }
+
+        async function generateScene() {
+            const kw = document.getElementById('keyword-input').value.trim();
+            if (!kw) return alert("请输入关键词");
+
+            const canvas = document.getElementById('scene-canvas');
+            const resultImg = document.getElementById('scene-result');
+            const loading = document.getElementById('loading-overlay');
+            const desc = document.getElementById('scene-desc');
+
+            setSaveEnabled(false);
+            loading.style.display = 'flex';
+            desc.innerText = "AI正在解析关键词语义并检索社区图片...";
+
+            try {
+                const candidates = buildAllCandidates();
+                if (!candidates.length) {
+                    showNoMatchReminder(canvas, resultImg, desc, kw, null, '当前社区图库为空');
+                    return;
+                }
+
+                let picked = null;
+                try {
+                    picked = await pickCandidateByLlm(kw, candidates);
+                } catch (error) {
+                    console.warn('大模型语义检索失败，回退规则检索:', error);
+                    picked = pickCandidateByRule(kw, candidates);
+                }
+
+                if (!picked || !picked.candidate) {
+                    showNoMatchReminder(canvas, resultImg, desc, kw, null, picked?.reason || '未检索到高相关图片');
+                    return;
+                }
+
+                const typeInfo = COMMUNITY_TYPES[picked.candidate.typeId] || null;
+                lastDetectedType = typeInfo;
+
+                const imageHit = await resolveCandidateImageUrl(picked.candidate);
+                if (!imageHit) {
+                    showNoMatchReminder(canvas, resultImg, desc, kw, typeInfo, '已匹配到相关主题，但图片加载超时或网络较慢，请稍后重试');
+                    return;
+                }
+
+                canvas.style.display = 'none';
+                resultImg.crossOrigin = 'anonymous';
+                resultImg.referrerPolicy = 'no-referrer';
+                resultImg.src = imageHit.url;
+                resultImg.style.display = 'block';
+                setSaveEnabled(true);
+
+                const typeName = typeInfo?.name || picked.candidate.typeName || '未识别';
+                const imageReason = picked.reason || '语义检索命中最相关图片';
+                const matchedKeywords = Array.isArray(picked.matchedKeywords) ? picked.matchedKeywords.filter(Boolean) : [];
+                const semanticTheme = picked.matchedTheme || picked.candidate.theme;
+                desc.innerText = `关键词：${kw}
+语义匹配社区类型：${typeName}
+语义匹配主题：${semanticTheme}
+命中目录：${imageHit.root}/${picked.candidate.folderName}
+命中图片：${imageHit.fileName}
+关联关键词：${matchedKeywords.length ? matchedKeywords.join('、') : '大模型语义匹配'}
+匹配依据：${imageReason}
+检索方式：${picked.source === 'llm' ? '大模型语义检索' : '规则回退检索'}`;
+            } catch (error) {
+                console.error(error);
+                showNoMatchReminder(canvas, resultImg, desc, kw, lastDetectedType, error.message || '检索失败');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function normalizeTypeIdList(typeIds) {
+            return Array.from(new Set((typeIds || []).map(item => mapTypeTextToId(item)).filter(Boolean)));
+        }
+
+        function buildCommunityTypeProfileText() {
+            return COMMUNITY_TYPE_LIST.map(type =>
+                `ID:${type.id}；社区类型：${type.name}；关键词：${type.keywords.join('、')}`
+            ).join('\n');
+        }
+
+        function rankTypeIdsByRule(userInput) {
+            return COMMUNITY_TYPE_LIST
+                .map(type => ({
+                    typeId: type.id,
+                    score: scoreCandidateByRule(userInput, {
+                        typeId: type.id,
+                        theme: type.name,
+                        file: '',
+                        keywords: type.keywords || []
+                    }, type)
+                }))
+                .sort((a, b) => b.score - a.score)
+                .map(item => item.typeId);
+        }
+
+        async function classifyCommunityTypeSemantic(userInput) {
+            const fallback = fallbackClassifyCommunityType(userInput);
+            const fallbackOrder = rankTypeIdsByRule(userInput);
+            const systemPrompt = `你是社区类型语义分类助手。请理解用户关键词的真实含义，并从 4 个社区类型中选出最相关的主类型，以及最多 2 个备选类型。
+只返回 JSON，不要输出其他文本。格式如下：
+{"type_id":"functional|atmospheric|governance|environment","backup_type_ids":["..."],"reason":"不超过40字"}
+主类型必须最贴近用户意图，备选类型用于检索兜底。`;
+            const userPrompt = `用户关键词：${userInput}
+社区类型资料：
+${buildCommunityTypeProfileText()}`;
+
+            try {
+                const data = await callArkJson(systemPrompt, userPrompt, 0.1);
+                const typeId = mapTypeTextToId(data.type_id || data.type || '');
+                if (!typeId) {
+                    throw new Error('模型未返回有效社区类型');
+                }
+                const backupTypeIds = normalizeTypeIdList([
+                    ...(Array.isArray(data.backup_type_ids) ? data.backup_type_ids : []),
+                    ...fallbackOrder
+                ]).filter(id => id !== typeId).slice(0, 2);
+                return {
+                    typeId,
+                    backupTypeIds,
+                    reason: data.reason || `语义识别为${COMMUNITY_TYPES[typeId].name}`,
+                    source: 'llm'
+                };
+            } catch (error) {
+                return {
+                    ...fallback,
+                    backupTypeIds: fallbackOrder.filter(id => id !== fallback.typeId).slice(0, 2),
+                    source: 'rule'
+                };
+            }
+        }
+
+        function pickCandidateByRule(userInput, candidates, typeInfo) {
+            if (!candidates.length) {
+                return { candidate: null, reason: '当前社区类型下没有候选图片', source: 'rule' };
+            }
+
+            let best = candidates[0];
+            let bestScore = scoreCandidateByRule(userInput, best, typeInfo);
+            for (let i = 1; i < candidates.length; i++) {
+                const current = candidates[i];
+                const currentScore = scoreCandidateByRule(userInput, current, typeInfo);
+                if (currentScore > bestScore) {
+                    best = current;
+                    bestScore = currentScore;
+                }
+            }
+
+            if (bestScore <= 0) {
+                return {
+                    candidate: null,
+                    matchedKeywords: [],
+                    reason: `在${typeInfo?.name || '当前社区类型'}下未命中相关 theme/keywords`,
+                    source: 'rule'
+                };
+            }
+
+            return {
+                candidate: best,
+                matchedTheme: best.theme,
+                matchedKeywords: findMatchedKeywords(userInput, best),
+                reason: `规则匹配命中：${typeInfo?.name || best.typeName}/${best.theme}（评分${bestScore}）`,
+                source: 'rule'
+            };
+        }
+
+        async function pickCandidateByLlm(userInput, candidates, typeInfo) {
+            const listText = candidates.map(item =>
+                `ID:${item.candidateId}；主题：${item.theme}；关键词：${item.keywords.join('、') || '无'}；文件：${item.file}${item.altFiles.length ? `（备选：${item.altFiles.join('、')}）` : ''}`
+            ).join('\n');
+
+            const systemPrompt = `你是社区图片语义检索助手。当前社区类型已经确定，请只在该类型候选图片中选择最相关的一项。
+请借助用户关键词的含义，优先匹配最贴切的 theme 和 keywords；如果没有足够相关的候选，请返回空结果。
+只返回 JSON，不要输出其他文本。格式如下：
+{"matched_candidate_id":"候选ID或空字符串","matched_theme":"主题或空字符串","matched_keywords":["关键词1","关键词2"],"reason":"不超过40字","need_reminder":false}`;
+
+            const userPrompt = `用户关键词：${userInput}
+当前社区类型：${typeInfo?.name || '未识别'}
+当前社区类型关键词：${(typeInfo?.keywords || []).join('、') || '无'}
+候选对象：
+${listText}`;
+
+            const data = await callArkJson(systemPrompt, userPrompt, 0.2);
+            const matchedCandidateId = String(data.matched_candidate_id || data.candidate_id || '').trim();
+            const matchedTheme = String(data.matched_theme || data.theme || '').trim();
+            const matchedKeywords = Array.isArray(data.matched_keywords) ? data.matched_keywords.filter(Boolean) : [];
+
+            let candidate = candidates.find(item => item.candidateId === matchedCandidateId);
+            if (!candidate && (matchedTheme || matchedKeywords.length)) {
+                candidate = findCandidateByThemeAndKeywords(candidates, typeInfo?.id || typeInfo?.name || '', matchedTheme, matchedKeywords, userInput);
+            }
+
+            if (!candidate) {
+                return {
+                    candidate: null,
+                    matchedTheme,
+                    matchedKeywords,
+                    reason: data.reason || `在${typeInfo?.name || '当前社区类型'}下未检索到高相关图片`,
+                    source: 'llm',
+                    needReminder: true
+                };
+            }
+
+            return {
+                candidate,
+                matchedTheme: matchedTheme || candidate.theme,
+                matchedKeywords: matchedKeywords.length ? matchedKeywords : findMatchedKeywords(userInput, candidate),
+                reason: data.reason || `语义检索命中：${typeInfo?.name || candidate.typeName}/${candidate.theme}`,
+                source: 'llm',
+                needReminder: Boolean(data.need_reminder)
+            };
+        }
+
+        async function generateScene() {
+            const kw = document.getElementById('keyword-input').value.trim();
+            if (!kw) return alert("请输入关键词");
+
+            const canvas = document.getElementById('scene-canvas');
+            const resultImg = document.getElementById('scene-result');
+            const loading = document.getElementById('loading-overlay');
+            const desc = document.getElementById('scene-desc');
+
+            setSaveEnabled(false);
+            loading.style.display = 'flex';
+            desc.innerText = "AI正在解析关键词含义并识别社区类型...";
+
+            try {
+                const classify = await classifyCommunityTypeSemantic(kw);
+                const primaryTypeInfo = COMMUNITY_TYPES[classify.typeId] || COMMUNITY_TYPES.functional;
+                const searchTypeIds = normalizeTypeIdList([classify.typeId, ...(classify.backupTypeIds || [])]);
+
+                lastDetectedType = primaryTypeInfo;
+
+                let picked = null;
+                let matchedTypeInfo = primaryTypeInfo;
+
+                for (const typeId of searchTypeIds) {
+                    const currentTypeInfo = COMMUNITY_TYPES[typeId];
+                    const candidates = buildCandidatesByType(typeId);
+                    if (!currentTypeInfo || !candidates.length) {
+                        continue;
+                    }
+
+                    try {
+                        picked = await pickCandidateByLlm(kw, candidates, currentTypeInfo);
+                    } catch (error) {
+                        console.warn(`语义选图失败，回退规则选图：${typeId}`, error);
+                        picked = pickCandidateByRule(kw, candidates, currentTypeInfo);
+                    }
+
+                    if (picked && picked.candidate) {
+                        matchedTypeInfo = currentTypeInfo;
+                        break;
+                    }
+                }
+
+                if (!picked || !picked.candidate) {
+                    showNoMatchReminder(
+                        canvas,
+                        resultImg,
+                        desc,
+                        kw,
+                        primaryTypeInfo,
+                        `已识别社区类型为${primaryTypeInfo.name}，但在该类型${searchTypeIds.length > 1 ? '及备选类型' : ''}中未检索到足够相关的图片。类型依据：${classify.reason || '语义分析'}`
+                    );
+                    return;
+                }
+
+                const imageHit = await resolveCandidateImageUrl(picked.candidate);
+                if (!imageHit) {
+                    showNoMatchReminder(canvas, resultImg, desc, kw, matchedTypeInfo, '已匹配到相关主题，但图片加载超时或网络较慢，请稍后重试');
+                    return;
+                }
+
+                lastDetectedType = matchedTypeInfo;
+                canvas.style.display = 'none';
+                resultImg.crossOrigin = 'anonymous';
+                resultImg.referrerPolicy = 'no-referrer';
+                resultImg.src = imageHit.url;
+                resultImg.style.display = 'block';
+                setSaveEnabled(true);
+
+                const matchedKeywords = Array.isArray(picked.matchedKeywords) ? picked.matchedKeywords.filter(Boolean) : [];
+                const semanticTheme = picked.matchedTheme || picked.candidate.theme;
+                const usedBackupType = matchedTypeInfo.id !== primaryTypeInfo.id;
+                desc.innerText = `关键词：${kw}
+识别社区类型：${primaryTypeInfo.name}
+类型依据：${classify.reason || '语义识别'}
+${usedBackupType ? `最终命中社区类型：${matchedTypeInfo.name}\n` : ''}命中主题：${semanticTheme}
+命中目录：${imageHit.root}/${picked.candidate.folderName}
+命中图片：${imageHit.fileName}
+关联关键词：${matchedKeywords.length ? matchedKeywords.join('、') : '语义匹配'}
+选图依据：${picked.reason || '大模型语义检索'}
+检索方式：${picked.source === 'llm' ? '类型内语义检索' : '类型内规则回退'}`;
+            } catch (error) {
+                console.error(error);
+                showNoMatchReminder(canvas, resultImg, desc, kw, lastDetectedType, error.message || '检索失败');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function drawPlanSim(ctx, w, h, kw) {
+            let seed = 0;
+            for (let i = 0; i < kw.length; i++) seed = ((seed << 5) - seed) + kw.charCodeAt(i);
+            const rng = () => {
+                seed = (seed * 9301 + 49297) % 233280;
+                return seed / 233280;
+            };
+
+            ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, w, h);
+            ctx.strokeStyle = "#7f8c8d"; ctx.lineWidth = 10;
+            ctx.strokeRect(w*0.1, h*0.1, w*0.8, h*0.8); 
+            
+            // 随机分布节点
+            for (let i = 0; i < 5 + Math.floor(rng() * 5); i++) {
+                ctx.fillStyle = `hsl(${rng() * 360}, 60%, 50%)`;
+                ctx.beginPath(); 
+                ctx.arc(w * (0.2 + rng() * 0.6), h * (0.2 + rng() * 0.6), 15, 0, Math.PI*2); 
+                ctx.fill();
+            }
+            
+            ctx.fillStyle = "#333";
+            ctx.font = "bold 14px SimSun";
+            ctx.textAlign = "center";
+            ctx.fillText("基于关键词描述的动态规划图", w/2, h - 20);
+        }
+
+        // 确保 DOM 加载后初始化
+        window.onload = () => {
+            resetGenerator();
+        };
+    </script>
+</body>
+</html>
