@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Portal</title>
+    <meta http-equiv="refresh" content="0; url=mobile_portal.html">
+    <script>
+        (function redirectToPortal() {
+            const target = `mobile_portal.html${window.location.search || ''}${window.location.hash || ''}`;
+            window.location.replace(target);
+        })();
+    </script>
+</head>
+<body>
+    <p>Redirecting to mobile_portal.html...</p>
+</body>
+</html>

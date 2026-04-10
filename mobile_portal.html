@@ -225,7 +225,11 @@
             acc[item.name] = item.id;
             return acc;
         }, {});
-        const IMAGE_ROOT_DIRS = ['开发资料/图片集'];
+        // 本地运行目录保留在“开发资料/图片集”，GitHub 仓库发布目录为“图片集”。
+        const IMAGE_ROOT_DIRS = {
+            local: ['开发资料/图片集', '图片集'],
+            remote: ['图片集', '开发资料/图片集']
+        };
         const DEFAULT_GITHUB_REPO = {
             owner: 'yewwung',
             repo: 'mobile_portal'
@@ -1103,23 +1107,29 @@ ${listText}`;
             };
         }
 
-        function buildImageUrlCandidates(rootDir, folderName, fileName) {
-            const relativePath = encodeURI(`${rootDir}/${folderName}/${fileName}`);
+        function getImageRootDirsForSource(source) {
+            return source?.isLocal ? IMAGE_ROOT_DIRS.local : IMAGE_ROOT_DIRS.remote;
+        }
+
+        function buildImageUrlCandidates(folderName, fileName) {
             const candidates = [];
-            const pushUnique = (url, source) => {
+            const pushUnique = (url, source, rootDir) => {
                 if (url && !candidates.some(item => item.url === url)) {
-                    candidates.push({ url, source });
+                    candidates.push({ url, source, rootDir });
                 }
             };
 
             IMAGE_BASE_SOURCES.forEach(source => {
-                if (source.kind === 'relative') {
-                    pushUnique(relativePath, source);
-                    return;
-                }
-                if (source.baseUrl) {
-                    pushUnique(`${source.baseUrl}/${relativePath}`, source);
-                }
+                getImageRootDirsForSource(source).forEach(rootDir => {
+                    const relativePath = encodeURI(`${rootDir}/${folderName}/${fileName}`);
+                    if (source.kind === 'relative') {
+                        pushUnique(relativePath, source, rootDir);
+                        return;
+                    }
+                    if (source.baseUrl) {
+                        pushUnique(`${source.baseUrl}/${relativePath}`, source, rootDir);
+                    }
+                });
             });
             return candidates;
         }
@@ -1193,7 +1203,8 @@ ${listText}`;
                             settled = true;
                             resolve({
                                 url: loadedUrl,
-                                source: item.source
+                                source: item.source,
+                                rootDir: item.rootDir
                             });
                             return;
                         }
@@ -1209,21 +1220,19 @@ ${listText}`;
         async function resolveCandidateImageUrl(candidate) {
             const files = getCandidateFileNames(candidate);
             for (const fileName of files) {
-                for (const root of IMAGE_ROOT_DIRS) {
-                    const urlCandidates = buildImageUrlCandidates(root, candidate.folderName, fileName);
-                    const priorityList = Array.from(new Set(urlCandidates.map(item => item?.source?.priority ?? 0))).sort((a, b) => a - b);
-                    for (const priority of priorityList) {
-                        const currentGroup = urlCandidates.filter(item => (item?.source?.priority ?? 0) === priority);
-                        const loaded = await probeImageCandidateGroup(currentGroup);
-                        if (loaded) {
-                            return {
-                                url: loaded.url,
-                                root,
-                                fileName,
-                                sourceLabel: loaded.source?.label || '未知来源',
-                                isLocal: Boolean(loaded.source?.isLocal)
-                            };
-                        }
+                const urlCandidates = buildImageUrlCandidates(candidate.folderName, fileName);
+                const priorityList = Array.from(new Set(urlCandidates.map(item => item?.source?.priority ?? 0))).sort((a, b) => a - b);
+                for (const priority of priorityList) {
+                    const currentGroup = urlCandidates.filter(item => (item?.source?.priority ?? 0) === priority);
+                    const loaded = await probeImageCandidateGroup(currentGroup);
+                    if (loaded) {
+                        return {
+                            url: loaded.url,
+                            root: loaded.rootDir,
+                            fileName,
+                            sourceLabel: loaded.source?.label || '未知来源',
+                            isLocal: Boolean(loaded.source?.isLocal)
+                        };
                     }
                 }
             }
